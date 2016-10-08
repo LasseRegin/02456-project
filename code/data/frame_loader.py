@@ -2,37 +2,72 @@
 import os
 import json
 import cv2
-import matplotlib.pyplot as plt
+from scipy.misc import imread
 
 FILEPATH = os.path.dirname(os.path.abspath(__file__))
 
+# It was found the using
+#   video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+# to seek in the video was very slow.
+
 class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
-    FRAMES_FOLDER = os.path.join(DATA_FOLDER, 'frames')
+    downsample_ext = ''
 
-    def __init__(self, filename='GOPR2477'):
+    def __init__(self, filename='GOPR2477', downsample=1, found_only=False):
         self.filename = filename
+        self.downsample = downsample
+        self.found_only = found_only
 
-        self.video_capture = cv2.VideoCapture(os.path.join(self.DATA_FOLDER, '%s.mp4' % (self.filename)))
+        # Determine downsample extension
+        if self.downsample > 1:
+            self.downsample_ext = '_ds_x%d' % (self.downsample)
+
+        # Define video path
+        self.VIDEO_PATH = os.path.join(
+            self.DATA_FOLDER,
+            '%s%s.mp4' % (self.filename, self.downsample_ext)
+        )
+
+        # Define json file path
+        self.JSON_PATH = os.path.join(
+            self.DATA_FOLDER,
+            '%s.json' % (self.filename)
+        )
+
+        with open(self.JSON_PATH) as f:
+            self.frame_data = json.load(f)
+
+    def initialize_video(self):
+        self.video_capture = cv2.VideoCapture(self.VIDEO_PATH)
         self.fps = self.video_capture.get(cv2.CAP_PROP_FPS)
         self.frame_count = self.video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
-        with open(os.path.join(self.DATA_FOLDER, '%s.json' % (self.filename))) as f:
-            self.frame_data = json.load(f)
 
     def __iter__(self):
         self.iter = 0
 
-        while self.video_capture.isOpened():
-            success, img = self.video_capture.read()
+        self.initialize_video()
 
+        while self.video_capture.isOpened():
+
+            # Check next frame
+            success = self.video_capture.grab()
             if not success: raise StopIteration()
             self.iter += 1
+
+            # Get frame information
             info = self.frame_data[self.iter]
 
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            if self.found_only and not info['found']:   continue
+
+            # Decode frame
+            _, img = self.video_capture.retrieve()
+
+            # Convert to grayscale
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             yield Frame(
-                frame_id=info['id'],
                 image=img,
                 x=info['pixel_x'],
                 y=info['pixel_y'],
@@ -40,34 +75,43 @@ class FrameLoader:
             )
 
 
-class FoundFrameLoader(FrameLoader):
-    def __init__(self, **kwargs):
+class FrameLoaderFromFiles(FrameLoader):
+    def __init__(self, frame_ext='png', **kwargs):
         super().__init__(**kwargs)
 
+        self.frame_ext = frame_ext
+
+        # Get frame folder path
+        self.FRAME_FOLDER = os.path.join(
+            self.DATA_FOLDER,
+            '%s%s' % (self.filename, self.downsample_ext)
+        )
+
+    def get_frame_filepath(self, frame_number):
+        return os.path.join(
+            self.FRAME_FOLDER,
+            'frame-%d.%s' % (frame_number+1, self.frame_ext)
+        )
+
     def __iter__(self):
-        self.iter = 0
+        for info in self.frame_data:
+            found = info['found']
 
-        for i, info in enumerate(self.frame_data):
-            if info['found']:
-                self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, info['frame'])
-                success, img = self.video_capture.read()
+            if self.found_only and not found:   continue
 
-                if not success: raise StopIteration()
+            img = imread(name=self.get_frame_filepath(frame_number=info['frame']))
+            #img = cv2.imread(self.get_frame_filepath(frame_number=info['frame']))
 
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-                yield Frame(
-                    frame_id=info['id'],
-                    image=img,
-                    x=info['pixel_x'],
-                    y=info['pixel_y'],
-                    found=info['found']
-                )
+            yield Frame(
+                image=img,
+                x=info['pixel_x'],
+                y=info['pixel_y'],
+                found=found
+            )
 
 
 class Frame:
-    def __init__(self, frame_id, image, x, y, found):
-        self.frame_id = frame_id
+    def __init__(self, image, x, y, found):
         self.image = image
         self.x = x
         self.y = y
@@ -75,8 +119,17 @@ class Frame:
 
 
 if __name__ == '__main__':
-    frame_loader = FrameLoader()
 
-    for i, frame in enumerate(frame_loader):
-        print(i)
-        print(frame.image.shape)
+    import time
+
+    start = time.time()
+    frame_loader = FrameLoader(downsample=4)
+    for frame in frame_loader:
+        tmp = frame
+    print('FrameLoader spent %.4fs' % (time.time() - start))
+
+    start = time.time()
+    frame_loader = FrameLoaderFromFiles(downsample=4)
+    for frame in frame_loader:
+        tmp = frame
+    print('FrameLoader spent %.4fs' % (time.time() - start))

@@ -1,31 +1,23 @@
 
 import math
+import numpy as np
+
 import data
+import utils
 from matplotlib import pyplot as plt
 
-frame_loader = data.FrameLoader(filename='GOPR2477')
+frame_loader = data.FrameLoader(filename='GOPR2477', downsample=2)
+frame_loader = utils.BallFoundFilter(frame_iterator=frame_loader)
+frame_loader = utils.BallPositionPDF(frame_iterator=frame_loader)
 
-plt.ion()
-fig = plt.figure(figsize=(20,10))
-img = None
+for i, (image, pdf) in enumerate(frame_loader):
+    fig = plt.figure(figsize=(20,10))
+    plt.subplot(2, 1, 1)
+    plt.imshow(pdf)
+    plt.subplot(2, 1, 2)
+    plt.imshow(image)
 
-for i, frame in enumerate(frame_loader):
+    plt.show()
 
-    if (i % 100) == 0:
-        print(i)
-
-    if frame.found:
-        if img is None:
-            img = plt.imshow(frame.image)
-        else:
-            img.set_data(frame.image)
-
-        x = frame.x * frame.image.shape[1]
-        y = frame.y * frame.image.shape[0]
-        print((x, y))
-        plt.scatter(x, y, marker='o', s=50)
-
-        plt.pause(.01)
-        plt.draw()
-        #if i > 20:
-        #    break
+    if i > 20:
+        break
