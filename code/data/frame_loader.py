@@ -14,7 +14,7 @@ class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
     downsample_ext = ''
 
-    def __init__(self, filename='GOPR2477', downsample=1, found_only=False):
+    def __init__(self, filename='GOPR2471', downsample=1, found_only=False):
         self.filename = filename
         self.downsample = downsample
         self.found_only = found_only
