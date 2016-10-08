@@ -9,4 +9,9 @@ Project in course 02456 Deep Learning E16 regarding end-to-end object tracking i
 
 # Setup
 
-* Run `setup.sh`
+* Run `setup.sh` which does the following
+  * Downloads one of the available videos
+  * Download corresponding frame details in `JSON` format
+  * Converts video using `ffmpeg` in order to make us of OpenCV's `VideoCapture` class
+  * Extracts frames from the video using `ffmpeg` downsampled 4 times
+  (using full size will take up about 120GB of your hard drive)
