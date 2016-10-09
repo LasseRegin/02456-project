@@ -2,8 +2,8 @@
 # Get base directory
 BASEDIR=$(dirname "$0")
 
-# # Settings (original fps=30)
-# FRAME_RATE=30
+# Settings (original fps=29.970030 according to VLC)
+FRAME_RATE=29.970030
 
 # Create data folder
 DATA_FOLDER="$BASEDIR/code/data/raw"
@@ -14,8 +14,9 @@ mkdir -p -- "$FRAMES_FOLDER"
 # Define video path
 FILENAME="GOPR2471"
 VIDEO_PATH="$DATA_FOLDER/$FILENAME.mp4"
+VIDEO_PATH_X4="$DATA_FOLDER/${FILENAME}_ds_x4.mp4"
 JSON_PATH="$DATA_FOLDER/$FILENAME.json"
-TMP_VIDEO_PATH="$DATA_FOLDER/$FILENAME_tmp.mp4"
+TMP_VIDEO_PATH="$DATA_FOLDER/${FILENAME}_tmp.mp4"
 
 # Download video sample
 echo "Downloading video $FILENAME"
@@ -24,6 +25,7 @@ curl "http://recoordio-zoo.s3-eu-west-1.amazonaws.com/2016/Hero4_RIG/25062016/L/
 
 # Convert video in order to be able to extract frames using OpenCV
 ffmpeg -i $VIDEO_PATH -crf 18 $TMP_VIDEO_PATH
+ffmpeg -i $VIDEO_PATH -crf 18 -s 960x540 $VIDEO_PATH_X4
 
 # Also extract frames from video if this method should be used
 ffmpeg -i $VIDEO_PATH scale=960:540 "$FRAMES_FOLDER/frame-%d.png"
