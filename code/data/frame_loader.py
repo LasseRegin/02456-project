@@ -1,7 +1,6 @@
 
 import os
 import json
-import cv2
 import subprocess
 from scipy.misc import imread
 from urllib.request import urlopen, urlretrieve
