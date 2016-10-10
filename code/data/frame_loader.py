@@ -2,13 +2,80 @@
 import os
 import json
 import cv2
+import subprocess
 from scipy.misc import imread
+from urllib.request import urlopen, urlretrieve
 
 FILEPATH = os.path.dirname(os.path.abspath(__file__))
 
 # It was found the using
 #   video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
 # to seek in the video was very slow.
+
+
+# TODO: Maybe fix small loading time from fetching info .json file, when we already
+#       have files.
+class DataPersistence:
+    DATA_FOLDER = os.path.join(FILEPATH, 'raw')
+    def __init__(self, info_url='http://recoordio-zoo.s3-eu-west-1.amazonaws.com/dataset/09102016.json'):
+        self.info_url = info_url
+        self.video_filenames = []
+
+    def download(self):
+        response = urlopen(self.info_url)
+        data_raw = response.read().decode("utf-8")
+        data = json.loads(data_raw)
+
+        if 'videos' not in data:
+            raise KeyError('Could not find videos key in json file.')
+
+        for video in data['videos']:
+
+            frame_folder = os.path.join(self.DATA_FOLDER, video['hash'])
+            if not os.path.isdir(frame_folder):
+                os.mkdir(frame_folder)
+
+            for sample_number, sample in enumerate(video['samples']):
+                url = sample['s3video']
+                basename = os.path.basename(url)
+                filename = os.path.join(self.DATA_FOLDER, basename)
+
+                # Add filename
+                self.video_filenames.append(filename)
+
+                if not os.path.isfile(filename):
+                    print('Downloading %s..' % (basename))
+                    urlretrieve(url, filename)
+
+                    # Get annotation
+                    url_anno = sample['human_annotation']['s3annotation']
+                    filename_anno = os.path.join(self.DATA_FOLDER, os.path.basename(url_anno))
+                    urlretrieve(url_anno, filename=filename_anno)
+
+                    target_filenames_formatted = '%s/frame-%%d.png' % (frame_folder)
+
+                    # Extract frames
+                    self.extract_frames(
+                        video_path=filename,
+                        target_width=480, target_height=270,
+                        target_framerate=10,
+                        target_filenames_formatted=target_filenames_formatted
+                    )
+
+
+    def extract_frames(self, video_path, target_width, target_height,
+                       target_framerate, target_filenames_formatted):
+        # Make sure we are in the data folder
+        os.chdir(FILEPATH)
+
+        # Run command
+        subprocess.call(['ffmpeg',
+            '-i', video_path,
+            '-s', '%dx%d' % (target_width, target_height),
+            '-r', str(target_framerate),
+            target_filenames_formatted
+        ])
+
 
 class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
@@ -18,6 +85,12 @@ class FrameLoader:
         self.filename = filename
         self.downsample = downsample
         self.found_only = found_only
+
+        # Check data persistency
+        self.data = DataPersistence()
+        self.data.download()
+
+        return
 
         # Determine downsample extension
         if self.downsample > 1:
@@ -120,16 +193,18 @@ class Frame:
 
 if __name__ == '__main__':
 
-    import time
+    data_lodaer = FrameLoader()
 
-    start = time.time()
-    frame_loader = FrameLoader(downsample=4)
-    for frame in frame_loader:
-        tmp = frame
-    print('FrameLoader spent %.4fs' % (time.time() - start))
-
-    start = time.time()
-    frame_loader = FrameLoaderFromFiles(downsample=4)
-    for frame in frame_loader:
-        tmp = frame
-    print('FrameLoader spent %.4fs' % (time.time() - start))
+    # import time
+    #
+    # start = time.time()
+    # frame_loader = FrameLoader(downsample=4)
+    # for frame in frame_loader:
+    #     tmp = frame
+    # print('FrameLoader spent %.4fs' % (time.time() - start))
+    #
+    # start = time.time()
+    # frame_loader = FrameLoaderFromFiles(downsample=4)
+    # for frame in frame_loader:
+    #     tmp = frame
+    # print('FrameLoader spent %.4fs' % (time.time() - start))
