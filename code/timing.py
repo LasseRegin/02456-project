@@ -4,7 +4,7 @@ import time
 import utils
 
 
-frame_loader = data.FrameLoader(downsample=4, found_only=True)
+frame_loader = data.FrameLoader(max_videos=1)
 frame_loader = utils.BallPositionPoint(frame_iterator=frame_loader)
 frame_loader = utils.ReshapeAndStandardize(frame_iterator=frame_loader)
 
