@@ -8,8 +8,8 @@ class ReshapeAndStandardize:
         for image, target in self.frame_iterator:
 
             # Reshape image to follow the shape standards
-            # (observations, channels, height, width)
-            image = image.reshape(((1,) + image.shape[0:2]))
+            # (observations, height, width, channels)
+            image = image.reshape((image.shape[0:2]) + (1,))
 
             # Standardize image
             #image = (image - image.mean()) / image.std()
