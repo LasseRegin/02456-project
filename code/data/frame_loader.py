@@ -38,14 +38,16 @@ class FrameLoader:
         self.targets = group['targets']
 
     def __iter__(self):
-        for image, target in zip(self.inputs, self.targets):
-            yield image, target
+        #for image, target in zip(self.inputs, self.targets):
+        #    yield image, target
 
-        # for i, image in enumerate(self.inputs):
-        #     yield image, self.targets[i]
+        if self.shuffle:
+            order = np.random.permutation(self.inputs.shape[0])
+        else:
+            order = range(0, self.inputs.shape[0])
 
-        #for i in range(0, self.inputs.shape[0]):
-        #    yield self.inputs[i], self.targets[i]
+        for i in order:
+            yield self.inputs[i], self.targets[i]
 
     def dataset_available(self):
         f = h5py.File(self.HDF5_FILE, 'a')
