@@ -4,3 +4,4 @@ scipy==0.18.1
 sklearn
 matplotlib
 imageio
+h5py==2.6.0

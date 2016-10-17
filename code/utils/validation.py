@@ -1,5 +1,6 @@
 
 import collections
+import numpy as np
 
 class Validation:
     def __init__(self, frame_iterator, test_fraction=0.33):
@@ -59,3 +60,30 @@ class SeperationCounter:
 
     def increment_test(self):
         self.in_test += 1
+
+
+#
+# HDF5 section
+#
+
+
+class HDF5Validation:
+    def __init__(self, frame_iterator, count, test_fraction=0.33):
+        indices = np.random.permutation(count)
+        n_test = int(count // (1.0 / test_fraction))
+
+        idx_test  = sorted(indices[0:n_test].tolist())
+        idx_train = sorted(indices[n_test:].tolist())
+
+        self.train = HDF5Iterator(frame_iterator, idx_train)
+        self.test  = HDF5Iterator(frame_iterator, idx_test)
+
+
+class HDF5Iterator:
+    def __init__(self, frame_iterator, indices):
+        self.frame_iterator = frame_iterator
+        self.indices = indices
+
+    def __iter__(self):
+        for idx in self.indices:
+            yield self.frame_iterator.inputs[idx], self.frame_iterator.targets[idx]

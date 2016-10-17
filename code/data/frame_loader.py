@@ -3,8 +3,9 @@ from __future__ import division, generators, print_function, unicode_literals, w
 import os
 import json
 import cv2
+import h5py
 import random
-import imageio
+import numpy as np
 
 from data.persistence import DataPersistence
 
@@ -14,85 +15,90 @@ FILEPATH = os.path.dirname(os.path.abspath(__file__))
 #   video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
 # to seek in the video was very slow.
 
-
-class FrameFileLoader:
+class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
+    HDF5_FILE = os.path.join(DATA_FOLDER, 'data.hdf5')
 
     def __init__(self, shuffle=False, **kwargs):
-        self.shuffle = shuffle
-
-        # Check data persistency
-        self.data = DataPersistence(require_videos=False, require_frames=True, **kwargs)
-
-        self.frames = []
-        for video in self.data.videos:
-            with open(video['annotation']) as f:
-                data = json.load(f)
-
-            balls = data['balls']
-            for frame_number in range(0, video['frame_count']):
-                frame_filename = os.path.join(video['frame_folder'], 'frame-%d.png' % (frame_number+1))
-                ball = balls.get(str(frame_number), None)
-                found = ball is not None
-
-                if found:
-                    x, y = ball['x'], ball['y']
-                else:
-                    x, y = None, None
-
-                self.frames.append(Frame(
-                    filename=frame_filename,
-                    found=found,
-                    x=x,
-                    y=y
-                ))
-
-    def __iter__(self):
-        if self.shuffle:
-            order = np.random.permutation(len(self.frames))
-            return iter(self.frames[order])
-        else:
-            return iter(self.frames)
-
-
-class FrameLoader:
-    def __init__(self, **kwargs):
-        self.frame_file_loader = FrameFileLoader(**kwargs)
-
-    def __iter__(self):
-        for frame in self.frame_file_loader:
-            frame.image = imageio.imread(uri=frame.filename)
-            #frame.image = frame.image.mean(axis=2)
-            del frame.filename
-            yield frame
-
-
-class FrameLoaderFromVideo:
-    DATA_FOLDER = os.path.join(FILEPATH, 'raw')
-
-    def __init__(self, shuffle=False, found_only=False, **kwargs):
         # Check data persistency
         self.shuffle = shuffle
-        self.found_only = found_only
-        self.data = DataPersistence(require_videos=True, **kwargs)
+        self.data = DataPersistence(**kwargs)
 
-    def initialize_video(self, video_path):
-        video_capture = cv2.VideoCapture(video_path)
-        fps           = video_capture.get(cv2.CAP_PROP_FPS)
-        frame_count   = video_capture.get(cv2.CAP_PROP_FRAME_COUNT)
-        return video_capture, fps, frame_count
+        # Get unique identifier for specific data
+        self.data_id = str(hash(self.data))
+
+        # Check if data is available
+        if not self.dataset_available():
+            self.create_dataset()
+
+        # Load datafile
+        f = h5py.File(self.HDF5_FILE, 'r')
+        group = f[self.data_id]
+        self.inputs  = group['inputs']
+        self.targets = group['targets']
 
     def __iter__(self):
-        if self.shuffle:
-            random.shuffle(self.data.videos)
+        for image, target in zip(self.inputs, self.targets):
+            yield image, target
 
+        # for i, image in enumerate(self.inputs):
+        #     yield image, self.targets[i]
+
+        #for i in range(0, self.inputs.shape[0]):
+        #    yield self.inputs[i], self.targets[i]
+
+    def dataset_available(self):
+        f = h5py.File(self.HDF5_FILE, 'a')
+        is_available = self.data_id in f
+        f.close()
+        return is_available
+
+    def create_dataset(self):
+        print('Creating dataset..')
+
+        # Load file with read/write permissions
+        f = h5py.File(self.HDF5_FILE, 'a')
+
+        # Create group for the dataset
+        group = f.create_group(self.data_id)
+
+        try:
+            # We need to loop through the frames to determine the size of the dataset
+            frame_count = sum(1 for _ in self.get_frames())
+
+            # Initialize datasets
+            inputs_data_size  = (frame_count, self.data.target_height, self.data.target_width)
+            targets_data_size = (frame_count, 2)
+            inputs  = group.create_dataset("inputs",  inputs_data_size,  dtype='float32')
+            targets = group.create_dataset("targets", targets_data_size, dtype='float32')
+
+            for i, frame in enumerate(self.get_frames()):
+                # Preprocess frame
+                image = frame.image.astype('float32')
+                image -= image.mean()
+                target = np.array([frame.x, frame.y])
+
+                # Save observation
+                inputs[i, :, :] = image
+                targets[i, :] = target
+        except Exception:
+            # If anything went wrong delete the group again
+            del f[self.data_id]
+        except KeyboardInterrupt:
+            del f[self.data_id]
+
+        # Close file
+        f.close()
+
+
+    def get_frames(self):
         for video in self.data.videos:
             with open(video['annotation']) as f:
                 data = json.load(f)
             balls = data['balls']
 
             # Initialize video capture
-            video_capture, fps, frame_count = self.initialize_video(video_path=video['filename'])
+            video_capture = cv2.VideoCapture(video['filename'])
 
             self.iter = 0
             while video_capture.isOpened():
@@ -106,15 +112,8 @@ class FrameLoaderFromVideo:
                 ball = balls.get(str(self.iter), None)
                 found = ball is not None
 
-                # Continue if we ball was not found and we only want frames with
-                # the ball in it.
-                if self.found_only and not found:   continue
-
-                if found:
-                    x = ball['x'] / self.data.ORIGINAL_WIDTH
-                    y = ball['y'] / self.data.ORIGINAL_HEIGHT
-                else:
-                    x, y = None, None
+                # Continue if we ball was not found
+                if not found:   continue
 
                 # Decode frame
                 _, img = video_capture.retrieve()
@@ -124,16 +123,13 @@ class FrameLoaderFromVideo:
 
                 yield Frame(
                     image=img,
-                    x=x,
-                    y=y,
-                    found=found
+                    x=ball['x'] / self.data.ORIGINAL_WIDTH,
+                    y=ball['y'] / self.data.ORIGINAL_HEIGHT
                 )
 
 
 class Frame:
-    def __init__(self, x, y, found, filename=None, image=None):
+    def __init__(self, x, y, image):
         self.x = x
         self.y = y
-        self.found = found
-        self.filename = filename
         self.image = image
