@@ -26,9 +26,13 @@ class DataPersistence:
 
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
     def __init__(self, info_url='http://recoordio-zoo.s3-eu-west-1.amazonaws.com/dataset/09102016.json',
-                 require_videos=True, require_frames=False, max_videos=None, dim_ds_rate=8):
+                 max_videos=None, dim_ds_rate=8):
         self.dim_ds_rate = dim_ds_rate
         self.videos = []
+
+        # Determine new shapes if downsampling is wanted
+        self.target_width  = self.ORIGINAL_WIDTH  // self.dim_ds_rate
+        self.target_height = self.ORIGINAL_HEIGHT // self.dim_ds_rate
 
         # Make sure raw folder exists
         self.make_folder(foldername=self.DATA_FOLDER)
@@ -64,32 +68,15 @@ class DataPersistence:
 
                 # Create downsample video if needed and video required
                 filename_ds = self.construct_ds_filename(filename)
-                if self.dim_ds_rate > 1 and require_videos:
+                if self.dim_ds_rate > 1:
                     if not os.path.isfile(filename_ds):
                         print('Creating downsampled video')
                         self.downsample_video(
                             video_path=filename,
-                            target_width=self.ORIGINAL_WIDTH   // self.dim_ds_rate,
-                            target_height=self.ORIGINAL_HEIGHT // self.dim_ds_rate,
+                            target_width=target_width,
+                            target_height=target_height,
                             target_framerate=sample['fps_nominator'] / sample['fps_denominator'],
                             target_video_path=filename_ds
-                        )
-
-                # Check frames if frames are required
-                if require_frames:
-
-                    # Make frames folder if needed
-                    frame_folder = os.path.join(self.DATA_FOLDER, basename.split('.')[0])
-                    self.make_folder(foldername=frame_folder)
-
-                    # Extract frames if needed
-                    if len(os.listdir(frame_folder)) < sample['frame_count']:
-                        self.extract_frames(
-                            video_path=filename,
-                            target_width=self.ORIGINAL_WIDTH   // self.dim_ds_rate,
-                            target_height=self.ORIGINAL_HEIGHT // self.dim_ds_rate,
-                            target_framerate=sample['fps_nominator'] / sample['fps_denominator'],
-                            target_filenames_formatted='%s/frame-%%d.png' % (frame_folder)
                         )
 
                 # Get annotations if video sample contains annotations
@@ -103,7 +90,6 @@ class DataPersistence:
                     self.videos.append({
                         'filename': filename_ds if self.dim_ds_rate > 1 else filename,
                         'annotation': filename_anno,
-                        'frame_folder': frame_folder if require_frames else None,
                         'frame_count': sample['frame_count']
                     })
                     video_count += 1
@@ -114,7 +100,6 @@ class DataPersistence:
                     break
             if max_videos is not None and video_count >= max_videos:
                 break
-
 
     def construct_ds_filename(self, filename):
         filename_splitted = filename.split('.')
@@ -129,19 +114,6 @@ class DataPersistence:
     def make_folder(self, foldername):
         if not os.path.isdir(foldername):
             os.mkdir(foldername)
-
-    def extract_frames(self, video_path, target_width, target_height,
-                       target_framerate, target_filenames_formatted):
-        # Make sure we are in the data folder
-        os.chdir(FILEPATH)
-
-        # Run command
-        subprocess.call(['ffmpeg',
-            '-i', video_path,
-            '-s', '%dx%d' % (target_width, target_height),
-            '-r', str(target_framerate),
-            target_filenames_formatted
-        ])
 
     def downsample_video(self, video_path, target_width, target_height,
                          target_framerate, target_video_path):
