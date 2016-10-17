@@ -1,7 +1,5 @@
 numpy==1.11.2
 scipy==0.18.1
-#pillow==3.4.1
 sklearn
 matplotlib
-imageio
 h5py==2.6.0
