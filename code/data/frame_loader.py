@@ -70,9 +70,10 @@ class FrameLoader:
 class FrameLoaderFromVideo:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
 
-    def __init__(self, shuffle=False, **kwargs):
+    def __init__(self, shuffle=False, found_only=False, **kwargs):
         # Check data persistency
         self.shuffle = shuffle
+        self.found_only = found_only
         self.data = DataPersistence(require_videos=True, **kwargs)
 
     def initialize_video(self, video_path):
@@ -105,8 +106,13 @@ class FrameLoaderFromVideo:
                 ball = balls.get(str(self.iter), None)
                 found = ball is not None
 
+                # Continue if we ball was not found and we only want frames with
+                # the ball in it.
+                if self.found_only and not found:   continue
+
                 if found:
-                    x, y = ball['x'], ball['y']
+                    x = ball['x'] / self.data.ORIGINAL_WIDTH
+                    y = ball['y'] / self.data.ORIGINAL_HEIGHT
                 else:
                     x, y = None, None
 
