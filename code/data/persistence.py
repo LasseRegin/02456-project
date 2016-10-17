@@ -2,6 +2,7 @@ from __future__ import division, generators, print_function, unicode_literals, w
 
 import os
 import json
+import hashlib
 import subprocess
 from urllib.request import urlopen, urlretrieve
 
@@ -156,6 +157,12 @@ class DataPersistence:
             '-an', # Remove audio track
             target_video_path
         ])
+
+    def __hash__(self):
+        m = hashlib.md5()
+        joined_str = ''.join(sorted([v['filename'] for v in self.videos])).encode('utf-8')
+        m.update(joined_str)
+        return int(m.hexdigest(), 16)
 
 if __name__ == '__main__':
     data_persistence = DataPersistence()
