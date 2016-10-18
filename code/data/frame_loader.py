@@ -2,8 +2,8 @@ from __future__ import division, generators, print_function, unicode_literals, w
 
 import os
 import json
-import cv2
 import h5py
+import imageio
 import random
 import numpy as np
 
@@ -11,9 +11,6 @@ from data.persistence import DataPersistence
 
 FILEPATH = os.path.dirname(os.path.abspath(__file__))
 
-# It was found the using
-#   video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-# to seek in the video was very slow.
 
 class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
@@ -100,31 +97,22 @@ class FrameLoader:
             balls = data['balls']
 
             # Initialize video capture
-            video_capture = cv2.VideoCapture(video['filename'])
+            image_reader = imageio.get_reader(uri=video['filename'], format='ffmpeg')
 
-            self.iter = 0
-            while video_capture.isOpened():
-
-                # Check next frame
-                success = video_capture.grab()
-                if not success: break
-                self.iter += 1
+            for i, image in enumerate(image_reader):
 
                 # Get frame information
-                ball = balls.get(str(self.iter), None)
+                ball = balls.get(str(i), None)
                 found = ball is not None
 
                 # Continue if we ball was not found
                 if not found:   continue
 
-                # Decode frame
-                _, img = video_capture.retrieve()
-
                 # Convert to grayscale
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                image = image.mean(axis=2)
 
                 yield Frame(
-                    image=img,
+                    image=image,
                     x=ball['x'] / self.data.ORIGINAL_WIDTH,
                     y=ball['y'] / self.data.ORIGINAL_HEIGHT
                 )
