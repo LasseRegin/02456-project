@@ -77,7 +77,7 @@ init = tf.initialize_all_variables()
 with tf.Session() as sess:
     sess.run(init)
 
-    plot = utils.LossPlot(live=SHOW_PLOT)
+    plot = utils.LossPlot(show=SHOW_PLOT)
     for epoch in range(0, NUM_EPOCHS):
 
         train_loss = 0.
