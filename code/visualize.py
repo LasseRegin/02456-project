@@ -1,9 +1,5 @@
 
-import math
-import numpy as np
-
 import data
-import utils
 from matplotlib import pyplot as plt
 
 frame_loader = data.FrameLoader(shuffle=True)

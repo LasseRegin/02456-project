@@ -16,9 +16,8 @@ class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
     HDF5_FILE = os.path.join(DATA_FOLDER, 'data.hdf5')
 
-    def __init__(self, shuffle=False, **kwargs):
+    def __init__(self, shuffle=True, validation_group='train', **kwargs):
         # Check data persistency
-        self.shuffle = shuffle
         self.data = DataPersistence(**kwargs)
 
         # Get unique identifier for specific data
@@ -31,19 +30,24 @@ class FrameLoader:
         # Load datafile
         f = h5py.File(self.HDF5_FILE, 'r')
         group = f[self.data_id]
-        self.inputs  = group['inputs']
-        self.targets = group['targets']
+
+        if not validation_group in ['train', 'test']:
+            raise KeyError('Wrong validation_group key provided')
+
+        val_group = group[validation_group]
+        self.inputs  = val_group['inputs']
+        self.targets = val_group['targets']
+
+        # Determine order of frames
+        if shuffle:
+            self.order = np.random.permutation(self.inputs.shape[0])
+        else:
+            self.order = range(0, self.inputs.shape[0])
 
     def __iter__(self):
-        #for image, target in zip(self.inputs, self.targets):
-        #    yield image, target
+        print('FrameLoader __iter__ called')
 
-        if self.shuffle:
-            order = np.random.permutation(self.inputs.shape[0])
-        else:
-            order = range(0, self.inputs.shape[0])
-
-        for i in order:
+        for i in self.order:
             yield self.inputs[i], self.targets[i]
 
     def dataset_available(self):
@@ -61,15 +65,28 @@ class FrameLoader:
         # Create group for the dataset
         group = f.create_group(self.data_id)
 
+        # Create Training and Test group
+        group_train = group.create_group('train')
+        group_test  = group.create_group('test')
+
         try:
             # We need to loop through the frames to determine the size of the dataset
             frame_count = sum(1 for _ in self.get_frames())
 
+            # Take away 1/4 of the data for testing
+            n_test  = int(frame_count // 4)
+            n_train = frame_count - n_test
+
             # Initialize datasets
-            inputs_data_size  = (frame_count, self.data.target_height, self.data.target_width)
-            targets_data_size = (frame_count, 2)
-            inputs  = group.create_dataset("inputs",  inputs_data_size,  dtype='float32')
-            targets = group.create_dataset("targets", targets_data_size, dtype='float32')
+            inputs_data_size_train  = (n_train, self.data.target_height, self.data.target_width)
+            targets_data_size_train = (n_train, 2)
+            inputs_train  = group_train.create_dataset("inputs",  inputs_data_size_train,  dtype='float32')
+            targets_train = group_train.create_dataset("targets", targets_data_size_train, dtype='float32')
+
+            inputs_data_size_test  = (n_test, self.data.target_height, self.data.target_width)
+            targets_data_size_test = (n_test, 2)
+            inputs_test  = group_test.create_dataset("inputs",  inputs_data_size_test,  dtype='float32')
+            targets_test = group_test.create_dataset("targets", targets_data_size_test, dtype='float32')
 
             for i, frame in enumerate(self.get_frames()):
                 # Preprocess frame
@@ -78,8 +95,14 @@ class FrameLoader:
                 target = np.array([frame.x, frame.y])
 
                 # Save observation
-                inputs[i, :, :] = image
-                targets[i, :] = target
+                if i >= n_train:
+                    idx = i % n_train
+                    inputs_test[idx, :, :] = image
+                    targets_test[idx, :] = target
+                else:
+                    inputs_train[i, :, :] = image
+                    targets_train[i, :] = target
+
         except Exception:
             # If anything went wrong delete the group again
             del f[self.data_id]
