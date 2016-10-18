@@ -73,8 +73,8 @@ class DataPersistence:
                         print('Creating downsampled video')
                         self.downsample_video(
                             video_path=filename,
-                            target_width=target_width,
-                            target_height=target_height,
+                            target_width=self.target_width,
+                            target_height=self.target_height,
                             target_framerate=sample['fps_nominator'] / sample['fps_denominator'],
                             target_video_path=filename_ds
                         )
