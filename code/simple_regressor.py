@@ -10,8 +10,8 @@ import tensorflow as tf
 SHOW_PLOT = 'SHOW_PLOT' in os.environ
 
 # Training parameters
-NUM_EPOCHS = 10
-LEARNING_RATE = 1e-5
+NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-5))
 
 # Intialize frame loader
 frame_loader = data.FrameLoader(shuffle=True, validation_group='train')
