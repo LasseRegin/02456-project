@@ -16,8 +16,8 @@ LEARNING_RATE = 1e-5
 frame_loader = data.FrameLoader(shuffle=True)
 height, width = frame_loader.data.target_height, frame_loader.data.target_width
 
-# TODO: Add test and validation
-frame_loader_train = utils.Minibatch(frame_iterator=frame_loader)
+# Split in train and validation
+frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader)
 
 
 #
@@ -82,24 +82,40 @@ with tf.Session() as sess:
 
         train_loss = 0.
         train_batches = 0
-        for images, targets in frame_loader_train:
+        for images, targets in frame_loader.train:
             # Run optimization operation
             images /= images.std() # TODO: do somewhere else
 
-            _, loss, y_hat = sess.run([optimizer_step, cost, pred], feed_dict={
+            _, loss = sess.run([optimizer_step, cost], feed_dict={
                 x: images,
                 y: targets
             })
-            #print(y_hat)
-            #print(targets)
 
-            assert not (np.isnan(train_loss) or np.isinf(train_loss)), 'Loss returned NaN/Inf'
+            assert not (np.isnan(loss) or np.isinf(loss)), 'Loss returned NaN/Inf'
 
             train_loss += loss
             train_batches += 1
         train_loss /= train_batches
 
+        val_loss = 0.
+        val_batches = 0
+        for images, targets in frame_loader.val:
+            # Run optimization operation
+            images /= images.std() # TODO: do somewhere else
+
+            loss = sess.run(cost, feed_dict={
+                x: images,
+                y: targets
+            })
+
+            assert not (np.isnan(loss) or np.isinf(loss)), 'Loss returned NaN/Inf'
+
+            val_loss += loss
+            val_batches += 1
+        val_loss /= val_batches
+
         plot.update(epoch=epoch, loss=train_loss)
 
         print('Epoch %d/%d' % (epoch+1, NUM_EPOCHS))
         print('Train loss: %g' % (train_loss))
+        print('Val loss: %g' % (val_loss))
