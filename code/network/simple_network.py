@@ -13,12 +13,8 @@ class SimpleRegressor(Network):
         self.x_reshaped = tf.reshape(self.x, shape=[-1, total_pixels])
 
         # Weights for layer 1
-        self.W_1 = tf.Variable(tf.random_normal([total_pixels, 64], stddev=0.35), name='weights-layer-1')
-        self.b_1 = tf.Variable(tf.zeros([64]), name="biases-layer-1")
-
-        # Weights for layer 2
-        self.W_2 = tf.Variable(tf.random_normal([64, 2], stddev=0.35), name='weights-layer-2')
-        self.b_2 = tf.Variable(tf.zeros([2]), name="biases-layer-2")
+        self.W_1 = tf.Variable(tf.random_normal([total_pixels, 2], stddev=0.35), name='weights-layer-1')
+        self.b_1 = tf.Variable(tf.zeros([2]), name="biases-layer-1")
 
     def init_network(self):
 
@@ -26,11 +22,8 @@ class SimpleRegressor(Network):
         a_1 = tf.matmul(self.x_reshaped, self.W_1) + self.b_1
         z_1 = tf.nn.relu(a_1)
 
-        # Layer 2
-        a_2 = tf.matmul(z_1, self.W_2) + self.b_2
-
         # Final output
-        self.output = a_2
+        self.output = z_1
 
     def init_optimizer(self):
         # Minimize mean squared error
