@@ -20,10 +20,10 @@ class SimpleRegressor(Network):
 
         # Layer 1
         a_1 = tf.matmul(self.x_reshaped, self.W_1) + self.b_1
-        z_1 = tf.nn.relu(a_1)
+        #z_1 = tf.nn.relu(a_1)
 
         # Final output
-        self.output = z_1
+        self.output = a_1
 
     def init_optimizer(self):
         # Minimize mean squared error
