@@ -1,8 +1,9 @@
 %!TEX root = ../main.tex
 
 \section{Methods}
-Our input will be annotated video frames and the output will be a boolean cell list with TRUE in the cell where the ball is placed and FALSE elsewhere.
+Our input will be annotated video frames and the target will be a one-hot encoded vector containing the position of the ball.
 
-We will start out making a simple Convolutional Neural Network (CNN) to learn features from the frames.
+We will start out by making a Convolutional Neural Network (CNN) to learn features from the frames.
+Later we will attempt to use Google's \textit{Inception} network \cite{inception}.
 
 Furthermore, we want to implement a more advanced model taking the temporal information between the frames into account in a Recurrent Neural Network (RNN). This will be combined with a CNN learning the ball features.
