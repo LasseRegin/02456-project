@@ -1,17 +1,19 @@
 
 import math
+import random
 import collections
 import numpy as np
 
 
 class ValidationMinibatches:
-    def __init__(self, frame_iterator, val_fraction=0.25, batch_size=50):
+    def __init__(self, frame_iterator, val_fraction=0.25, batch_size=50, cache=False):
         """
             Splits frame loader into train and validation data.
         """
         self.frame_iterator = frame_iterator
         self.val_fraction = val_fraction
         self.batch_size = batch_size
+        self.cache = cache
 
         if not hasattr(frame_iterator, 'order'):
             raise KeyError('frame_iterator must be of type FrameLoader')
@@ -28,28 +30,46 @@ class ValidationMinibatches:
         self.batch_count_train = math.ceil(self.n_train / self.batch_size)
         self.batch_count_val   = math.ceil(self.n_val   / self.batch_size)
 
+        if self.cache:
+            print('Loading data into memory..')
+            self.inputs  = self.frame_iterator.inputs[...]
+            self.targets = self.frame_iterator.targets[...]
+
 
     @property
     def train(self):
-        # TODO: Shuffle self.order_train
+        # Shuffle indices
+        random.shuffle(self.order_train)
+
         for batch_number in range(0, self.batch_count_train):
             idx_from = batch_number * self.batch_size
             idx_to   = min((batch_number + 1) * self.batch_size, self.n_train)
+            indices  = self.order_train[idx_from:idx_to]
 
-            # Sort for faster h5py slicing
-            indices = sorted(self.order_train[idx_from:idx_to])
-            yield self.frame_iterator.inputs[indices], self.frame_iterator.targets[indices]
+            if self.cache:
+                yield self.inputs[indices], self.targets[indices]
+            else:
+                # Sort for faster h5py slicing
+                indices = sorted(indices)
+                yield self.frame_iterator.inputs[indices], self.frame_iterator.targets[indices]
 
 
     @property
     def val(self):
+        # Shuffle indices
+        random.shuffle(self.order_val)
+
         for batch_number in range(0, self.batch_count_val):
             idx_from = batch_number * self.batch_size
             idx_to   = min((batch_number + 1) * self.batch_size, self.n_val)
+            indices  = self.order_val[idx_from:idx_to]
 
-            # Sort for faster h5py slicing
-            indices = sorted(self.order_val[idx_from:idx_to])
-            yield self.frame_iterator.inputs[indices], self.frame_iterator.targets[indices]
+            if self.cache:
+                yield self.inputs[indices], self.targets[indices]
+            else:
+                # Sort for faster h5py slicing
+                indices = sorted(indices)
+                yield self.frame_iterator.inputs[indices], self.frame_iterator.targets[indices]
 
 
 

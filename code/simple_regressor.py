@@ -17,25 +17,8 @@ LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-5))
 frame_loader = data.FrameLoader(shuffle=True, validation_group='train')
 height, width = frame_loader.data.target_height, frame_loader.data.target_width
 
-#for inputs, targets in frame_loader:
-#    print(inputs.shape)
-#    print(inputs.dtype)
-#    break
-
-#print(frame_loader.dtype)
-#print(frame_loader.shape)
-#print(frame_loader.frame_count)
-
-print(frame_loader.data_can_fit_in_cache())
-
-
-import sys
-sys.exit()
-
-#frame_loader.frame_count
-
 # Split in train and validation
-frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader)
+frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader, cache=frame_loader.data_can_fit_in_memory())
 
 # Setup network
 nn = network.SimpleRegressor(name='simple-model-1',

@@ -157,7 +157,7 @@ class FrameLoader:
         return mem_bytes
 
 
-    def data_can_fit_in_cache(self):
+    def data_can_fit_in_memory(self):
         # Determine size of a single element in bytes
         element_size = self.inputs.dtype.itemsize
 
@@ -173,15 +173,6 @@ class FrameLoader:
         # Determine if we have enough memory (with a buffer of 1 GB)
         memory_diff = memory_available - size_total
         memory_diff_gb = memory_diff / (1024 ** 3)
-
-        print('size_total')
-        print(size_total)
-        print('memory_available')
-        print(memory_available)
-        print('memory_diff')
-        print(memory_diff)
-        print('memory_diff_gb')
-        print(memory_diff_gb)
 
         return memory_diff_gb > 1.0
 
