@@ -24,6 +24,25 @@ For next week
 * Try OpenCV on the new videos
 
 
+## 24/10-2016:
+
+Questions:
+* The loaded frozen graph:
+  * Does it require the fixed input size of 299x299?
+* Have any good way of loading the frames?
+  * Can we maybe exploit the large amount of memory on the dendron machine?
+
+
+
+Notes from the meeting
+
+*
+
+For next week
+
+* Change to predicting regions with softmax (maybe use weighted)
+  * Split in 20*12 regions and create targets being 0's in all regions
+
 # Timings
 
 ## Loading frames
