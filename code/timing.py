@@ -5,7 +5,7 @@ import utils
 
 
 frame_loader = data.FrameLoader(shuffle=True)
-frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader)
+frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader, cache=frame_loader.data_can_fit_in_memory())
 
 for i in range(0, 2):
     start = time.time()
