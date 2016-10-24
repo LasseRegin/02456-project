@@ -98,6 +98,9 @@ ENV/
 # Git
 #
 
+# Ignore pdf file
+report/main.pdf
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
