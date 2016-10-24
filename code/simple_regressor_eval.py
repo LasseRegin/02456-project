@@ -27,7 +27,11 @@ with tf.Session() as sess:
     for images, targets in frame_loader:
         images /= images.std() # TODO: do somewhere else
         test_loss += nn.val_op(session=sess, x=images, y=targets)
+        predictions = nn.predict(session=sess, x=images)
+        print('predictions')
+        print(predictions)
+        print('')
         test_batches += 1
     test_loss /= test_batches
-    
+
     print('Test loss: %g' % (test_loss))

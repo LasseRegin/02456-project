@@ -73,6 +73,11 @@ class Network:
         if self.verbose:
             print(message)
 
+    def predict(self, session, x):
+        return session.run(self.output, feed_dict={
+            self.x: x
+        })
+
     def train_op(self, session, x, y):
         return self.compute_loss(session, x, y, optimize=True)
 
