@@ -4,3 +4,4 @@ sklearn
 matplotlib
 h5py==2.6.0
 imageio==1.6
+psutil==4.4.0

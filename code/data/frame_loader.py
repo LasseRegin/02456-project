@@ -1,8 +1,10 @@
 from __future__ import division, generators, print_function, unicode_literals, with_statement
 
 import os
+import sys
 import json
 import h5py
+import psutil
 import imageio
 import random
 import numpy as np
@@ -38,11 +40,16 @@ class FrameLoader:
         self.inputs  = val_group['inputs']
         self.targets = val_group['targets']
 
+        # Determine number of frames in dataset
+        self.frame_count = self.inputs.shape[0]
+        self.dtype = self.inputs.dtype
+        self.shape = self.inputs.shape
+
         # Determine order of frames
         if shuffle:
-            self.order = np.random.permutation(self.inputs.shape[0])
+            self.order = np.random.permutation(self.frame_count)
         else:
-            self.order = range(0, self.inputs.shape[0])
+            self.order = range(0, self.frame_count)
 
     def __iter__(self):
         print('FrameLoader __iter__ called')
@@ -80,13 +87,13 @@ class FrameLoader:
             # Initialize datasets
             inputs_data_size_train  = (n_train, self.data.target_height, self.data.target_width)
             targets_data_size_train = (n_train, 2)
-            inputs_train  = group_train.create_dataset("inputs",  inputs_data_size_train,  dtype='float32')
-            targets_train = group_train.create_dataset("targets", targets_data_size_train, dtype='float32')
+            inputs_train  = group_train.create_dataset('inputs',  inputs_data_size_train,  dtype='float32')
+            targets_train = group_train.create_dataset('targets', targets_data_size_train, dtype='float32')
 
             inputs_data_size_test  = (n_test, self.data.target_height, self.data.target_width)
             targets_data_size_test = (n_test, 2)
-            inputs_test  = group_test.create_dataset("inputs",  inputs_data_size_test,  dtype='float32')
-            targets_test = group_test.create_dataset("targets", targets_data_size_test, dtype='float32')
+            inputs_test  = group_test.create_dataset('inputs',  inputs_data_size_test,  dtype='float32')
+            targets_test = group_test.create_dataset('targets', targets_data_size_test, dtype='float32')
 
             for i, frame in enumerate(self.get_frames()):
                 # Preprocess frame
@@ -139,6 +146,45 @@ class FrameLoader:
                     x=ball['x'] / self.data.ORIGINAL_WIDTH,
                     y=ball['y'] / self.data.ORIGINAL_HEIGHT
                 )
+
+
+    def available_memory(self):
+        """
+            Returns the amount of available memory in bytes.
+        """
+        #mem_bytes = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES')
+        mem_bytes = psutil.virtual_memory().available
+        return mem_bytes
+
+
+    def data_can_fit_in_cache(self):
+        # Determine size of a single element in bytes
+        element_size = self.inputs.dtype.itemsize
+
+        # Get number of elements in total
+        element_count = self.inputs.size
+
+        # Total size in bytes
+        size_total = element_count * element_size
+
+        # Get available memory
+        memory_available = self.available_memory()
+
+        # Determine if we have enough memory (with a buffer of 1 GB)
+        memory_diff = memory_available - size_total
+        memory_diff_gb = memory_diff / (1024 ** 3)
+
+        print('size_total')
+        print(size_total)
+        print('memory_available')
+        print(memory_available)
+        print('memory_diff')
+        print(memory_diff)
+        print('memory_diff_gb')
+        print(memory_diff_gb)
+
+        return memory_diff_gb > 1.0
+
 
 
 class Frame:
