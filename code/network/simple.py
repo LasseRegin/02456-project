@@ -14,7 +14,7 @@ class SimpleRegressor(Network):
 
         # Weights for layer 1
         self.W_1 = tf.Variable(tf.random_normal([total_pixels, 2], stddev=0.35), name='weights-layer-1')
-        self.b_1 = tf.Variable(tf.zeros([2]), name="biases-layer-1")
+        self.b_1 = tf.Variable(tf.zeros([2]), name='biases-layer-1')
 
     def init_network(self):
 
