@@ -110,10 +110,12 @@ class FrameLoader:
                     inputs_train[i, :, :] = image
                     targets_train[i, :] = target
 
-        except Exception:
+        except Exception as e:
             # If anything went wrong delete the group again
+            print(e)
             del f[self.data_id]
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as e:
+            print(e)
             del f[self.data_id]
 
         # Close file
