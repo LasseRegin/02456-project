@@ -15,10 +15,10 @@ class ValidationMinibatches:
         self.batch_size = batch_size
         self.cache = cache
 
-        if not hasattr(frame_iterator, 'order'):
+        if not hasattr(frame_iterator, 'inputs_memmap'):
             raise KeyError('frame_iterator must be of type FrameLoader')
 
-        frame_count = len(self.frame_iterator.order)
+        frame_count = self.frame_iterator.frame_count
 
         self.n_val = int(frame_count * self.val_fraction)
         self.n_train = frame_count - self.n_val
@@ -30,10 +30,11 @@ class ValidationMinibatches:
         self.batch_count_train = math.ceil(self.n_train / self.batch_size)
         self.batch_count_val   = math.ceil(self.n_val   / self.batch_size)
 
-        if self.cache:
-            print('Loading data into memory..')
-            self.inputs  = self.frame_iterator.inputs[...]
-            self.targets = self.frame_iterator.targets[...]
+        ## TODO: Is this necessary?
+        #if self.cache:
+        #    print('Loading data into memory..')
+        #    self.inputs  = self.frame_iterator.inputs_memmap[...]
+        #    self.targets = self.frame_iterator.targets_memmap[...]
 
 
     @property
@@ -46,12 +47,14 @@ class ValidationMinibatches:
             idx_to   = min((batch_number + 1) * self.batch_size, self.n_train)
             indices  = self.order_train[idx_from:idx_to]
 
-            if self.cache:
-                yield self.inputs[indices], self.targets[indices]
-            else:
+            yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
+
+            # if self.cache:
+                # yield self.inputs[indices], self.targets[indices]
+            # else:
                 # Sort for faster h5py slicing
-                indices = sorted(indices)
-                yield self.frame_iterator.inputs[indices], self.frame_iterator.targets[indices]
+                # indices = sorted(indices)
+                # yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
     @property
@@ -64,40 +67,42 @@ class ValidationMinibatches:
             idx_to   = min((batch_number + 1) * self.batch_size, self.n_val)
             indices  = self.order_val[idx_from:idx_to]
 
-            if self.cache:
-                yield self.inputs[indices], self.targets[indices]
-            else:
-                # Sort for faster h5py slicing
-                indices = sorted(indices)
-                yield self.frame_iterator.inputs[indices], self.frame_iterator.targets[indices]
+            yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
+
+            # if self.cache:
+            #     yield self.inputs[indices], self.targets[indices]
+            # else:
+            #     # Sort for faster h5py slicing
+            #     indices = sorted(indices)
+            #     yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
 
-class Validation:
-    def __init__(self, frame_iterator, frame_count, test_fraction=0.33):
-        """
-            Splits selector into train and test data.
-        """
-        self.frame_iterator = frame_iterator
-        self.test_fraction = test_fraction
-
-        n_test = int(frame_count // (1.0 / test_fraction))
-        order = np.random.permutation(frame_count)
-
-        self.order_train = order[n_test:]
-        self.order_test  = order[0:n_test]
-
-
-    @property
-    def train(self):
-        for idx in self.order_train:
-            yield self.frame_iterator.inputs[idx], self.frame_iterator.targets[idx]
-
-    @property
-    def test(self):
-        for idx in self.order_test:
-            yield self.frame_iterator.inputs[idx], self.frame_iterator.targets[idx]
-
+# class Validation:
+#     def __init__(self, frame_iterator, frame_count, test_fraction=0.33):
+#         """
+#             Splits selector into train and test data.
+#         """
+#         self.frame_iterator = frame_iterator
+#         self.test_fraction = test_fraction
+#
+#         n_test = int(frame_count // (1.0 / test_fraction))
+#         order = np.random.permutation(frame_count)
+#
+#         self.order_train = order[n_test:]
+#         self.order_test  = order[0:n_test]
+#
+#
+#     @property
+#     def train(self):
+#         for idx in self.order_train:
+#             yield self.frame_iterator.inputs[idx], self.frame_iterator.targets[idx]
+#
+#     @property
+#     def test(self):
+#         for idx in self.order_test:
+#             yield self.frame_iterator.inputs[idx], self.frame_iterator.targets[idx]
+#
 #
 # class Iterator:
 #     def __init__(self, frame_iterator, test_fraction=0.33):
