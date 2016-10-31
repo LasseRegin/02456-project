@@ -3,6 +3,7 @@ from __future__ import division, generators, print_function, unicode_literals, w
 import os
 import sys
 import json
+import math
 import psutil
 import random
 import imageio
@@ -16,9 +17,11 @@ class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
     MEMMAP_FILE = os.path.join(DATA_FOLDER, 'memmap_file.dat')
 
-    def __init__(self, target_type='coordinates', **kwargs):
+    def __init__(self, cells_x=20, cells_y=12, **kwargs):
 
-        self.target_type = target_type
+        # Heatmap dimensions
+        self.cells_x = cells_x
+        self.cells_y = cells_y
 
         # Check data persistency
         self.data = DataPersistence(**kwargs)
@@ -62,16 +65,9 @@ class FrameLoader:
 
         # Create memmory mapped numpy arrays
         self.inputs_memmap_filename = os.path.join(self.DATA_FOLDER, '%s-inputs.dat' % (self.data_id))
-        self.targets_memmap_filename = os.path.join(self.DATA_FOLDER, '%s-targets-%s.dat' % (self.data_id, self.target_type))
+        self.targets_memmap_filename = os.path.join(self.DATA_FOLDER, '%s-targets-%d-%d.dat' % (self.data_id, self.cells_x, self.cells_y))
         self.inputs_memmap_size = (self.frame_count, self.data.target_height, self.data.target_width, 3)
-
-        if self.target_type == 'coordinates':
-            self.targets_memmap_size = (self.frame_count, 3) # 3rd value for found/not-found
-            self.targets_memmap_dtype = 'float32'
-        elif self.target_type == 'heatmap':
-            raise NotImplementedError()
-        else:
-            raise KeyError('Wrong target_type key provided')
+        self.targets_memmap_size = (self.frame_count, self.cells_x * self.cells_y + 1)
 
         if not os.path.isfile(self.inputs_memmap_filename):
             # Create numpy memmap file
@@ -93,18 +89,19 @@ class FrameLoader:
             print('Creating targets numpy memmap file..')
             targets_memmap = np.memmap(
                 filename=self.targets_memmap_filename,
-                dtype=self.targets_memmap_dtype,
+                dtype='float32',
                 mode='w+',
                 shape=self.targets_memmap_size
             )
 
-            if self.target_type == 'coordinates':
-                for i, frame in enumerate(self.get_frames()):
-                    targets_memmap[i, :] = np.asarray([frame.x, frame.y, float(frame.found)])
-            elif self.target_type == 'heatmap':
-                raise NotImplementedError()
-            else:
-                raise KeyError('Wrong target_type key provided')
+            for i, frame in enumerate(self.get_frames()):
+                targets_memmap[i, :] = ballPositionHeatMap(
+                    found=frame.found,
+                    x=frame.x,
+                    y=frame.y,
+                    cells_x=self.cells_x,
+                    cells_y=self.cells_y
+                )
 
             del targets_memmap
 
@@ -117,7 +114,7 @@ class FrameLoader:
 
         self.targets_memmap = np.memmap(
             filename=self.targets_memmap_filename,
-            dtype=self.targets_memmap_dtype,
+            dtype='float32',
             mode='c',
             shape=self.targets_memmap_size
         )
@@ -126,16 +123,8 @@ class FrameLoader:
     def __iter__(self):
         print('FrameLoader __iter__ called')
 
-        if self.target_type == 'coordinates':
-            for i in range(0, self.frame_count):
-                target = self.targets_memmap[i]
-                if bool(target[2]):
-                    yield self.inputs_memmap[i], target[0:2]
-        elif self.target_type == 'heatmap':
-            raise NotImplementedError()
-        else:
-            raise KeyError('Wrong target_type key provided')
-
+        for i in range(0, self.frame_count):
+            yield self.inputs_memmap[i], self.targets_memmap[i]
 
     def get_frames(self):
         for frame in self.frames:
@@ -182,3 +171,35 @@ class Frame:
         self.filename = filename
         self.foldername = foldername # Used for identifying what video the frame is from
         self.image = image
+
+
+ballPositionHeatMapWeights = np.array([
+    [0.18, 0.25, 0.18],
+    [0.25, 1.00, 0.25],
+    [0.18, 0.25, 0.18]
+])
+
+
+def ballPositionHeatMap(found, x, y, cells_x, cells_y):
+    heatmap = np.zeros(shape=(cells_y, cells_x))
+    if not found:
+        return np.hstack((heatmap.flatten(), 1.0)).astype('float32')
+
+    # Get ball cell coordinate
+    x_cell = math.floor(x * cells_x)
+    y_cell = math.floor(y * cells_y)
+
+    for w_x, x_offset in enumerate([-1, 0, 1]):
+        for w_y, y_offset in enumerate([-1, 0, 1]):
+            x_idx = x_cell + x_offset
+            y_idx = y_cell + y_offset
+
+            # Check border constraints
+            if x_idx < 0 or y_idx < 0:  continue
+            if x_idx + 1 > cells_x:     continue
+            if y_idx + 1 > cells_y:     continue
+
+            # Assign weight
+            heatmap[y_idx, x_idx] = ballPositionHeatMapWeights[w_y, w_x]
+
+    return np.hstack((heatmap.flatten(), 0.0)).astype('float32')

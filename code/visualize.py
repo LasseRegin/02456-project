@@ -5,15 +5,15 @@ from matplotlib import pyplot as plt
 frame_loader = data.FrameLoader()
 
 for i, (image, target) in enumerate(frame_loader):
-    #found = bool(target[2])
-    #if not found:   continue
-    fig = plt.figure(figsize=(20,10))
+    if i < 5500:    continue
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 10))
     print('Pixel coordinates')
     print('target')
-    print(target[0]*image.shape[1],target[1]*image.shape[0])
+    print(target)
     print(image.shape)
-    plt.imshow(image)
+    axes[0].imshow(image)
+    axes[1].imshow(target[0:-1].reshape((12, 20)))
 
     plt.show()
-    if i > 20:
-        break
+    if i > 5520:    break
