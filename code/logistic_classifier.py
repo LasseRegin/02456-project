@@ -1,7 +1,5 @@
 
 import os
-import math
-
 import data
 import utils
 import network
@@ -12,15 +10,11 @@ import tensorflow as tf
 SHOW_PLOT = 'SHOW_PLOT' in os.environ
 
 # Training parameters
-NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 2))
-LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-3))
-
-MAX_VIDEOS = math.inf
-if 'RUNNING_ON_LOCAL' in os.environ:
-    MAX_VIDEOS = 4
+NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-5))
 
 # Intialize frame loader
-frame_loader = data.FrameLoader(max_videos=MAX_VIDEOS)
+frame_loader = data.FrameLoader()
 height, width = frame_loader.data.target_height, frame_loader.data.target_width
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
@@ -37,24 +31,28 @@ nn = network.LogisticClassifier(name='simple-model-1',
 with tf.Session() as sess:
     nn.init(sess)
 
-    lossTracker = utils.LossTracker(name=nn.name, num_epochs=NUM_EPOCHS, verbose=True)
+    plot = utils.LossPlot(show=SHOW_PLOT)
     for epoch in range(0, NUM_EPOCHS):
 
         train_loss = 0.
         train_batches = 0
         for images, targets in frame_loader.train:
-            train_loss += nn.train_op(session=sess, x=images, y=targets)
+            train_loss += nn.train_op(session=sess, x=images - images.mean(), y=targets)
             train_batches += 1
         train_loss /= train_batches
 
         val_loss = 0.
         val_batches = 0
         for images, targets in frame_loader.val:
-            val_loss += nn.val_op(session=sess, x=images, y=targets)
+            val_loss += nn.val_op(session=sess, x=images - images.mean(), y=targets)
             val_batches += 1
         val_loss /= val_batches
 
-        lossTracker.addEpoch(train_loss=train_loss, val_loss=val_loss)
+        plot.update(epoch=epoch, loss=train_loss)
+
+        print('Epoch %d/%d' % (epoch+1, NUM_EPOCHS))
+        print('Train loss: %g' % (train_loss))
+        print('Val loss: %g' % (val_loss))
 
     # Save model
     nn.save(sess)
@@ -63,9 +61,9 @@ with tf.Session() as sess:
     test_loss = 0.
     test_batches = 0
     for images, targets in frame_loader.test:
-        test_loss += nn.val_op(session=sess, x=images, y=targets)
+        test_loss += nn.val_op(session=sess, x=images - images.mean(), y=targets)
         test_batches += 1
     test_loss /= test_batches
 
-    lossTracker.addFinalTestLoss(test_loss)
-    lossTracker.save()
+    print('')
+    print('Final test loss: %g' % (test_loss))

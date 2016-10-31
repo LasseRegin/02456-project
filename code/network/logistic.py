@@ -28,7 +28,7 @@ class LogisticClassifier(Network):
     def init_optimizer(self):
         # Minimize cross entropy
         self.cost = tf.reduce_mean(-tf.reduce_sum(self.y * tf.log(tf.clip_by_value(self.output, 1e-10, 1.0)), reduction_indices=[1]))
-        
+
         # Gradient Descent
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
