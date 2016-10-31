@@ -14,7 +14,7 @@ NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
 LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-5))
 
 # Intialize frame loader
-frame_loader = data.FrameLoader(shuffle=True, validation_group='train')
+frame_loader = data.FrameLoader(target_type='coordinates')
 height, width = frame_loader.data.target_height, frame_loader.data.target_width
 
 # Split in train and validation
@@ -22,7 +22,7 @@ frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader, cache=fr
 
 # Setup network
 nn = network.SimpleRegressor(name='simple-model-1',
-                             input_shape=(None, height, width),
+                             input_shape=(None, height, width, 3),
                              target_shape=(None, 2), learning_rate=LEARNING_RATE,
                              verbose=True)
 
@@ -35,16 +35,16 @@ with tf.Session() as sess:
         train_loss = 0.
         train_batches = 0
         for images, targets in frame_loader.train:
-            images /= images.std() # TODO: do somewhere else
-            train_loss += nn.train_op(session=sess, x=images, y=targets)
+            print(images / images.std())
+            print(targets[:,0:2])
+            train_loss += nn.train_op(session=sess, x=images / images.std(), y=targets[:,0:2])
             train_batches += 1
         train_loss /= train_batches
 
         val_loss = 0.
         val_batches = 0
         for images, targets in frame_loader.val:
-            images /= images.std() # TODO: do somewhere else
-            val_loss += nn.val_op(session=sess, x=images, y=targets)
+            val_loss += nn.val_op(session=sess, x=images / images.std(), y=targets[:,0:2])
             val_batches += 1
         val_loss /= val_batches
 
