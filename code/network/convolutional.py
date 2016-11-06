@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from network.base import Network
 
-class ConvolutionalRegressor(Network):
+class ConvolutionalClassifier(Network):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -137,15 +137,16 @@ class ConvolutionalRegressor(Network):
         a_3 = tf.matmul(reshape, self.W_3) + self.b_3
         z_3 = tf.nn.relu(a_3, name='relu-layer-3')
 
-        # Layer 4 - Linear TODO: Change to using softmax when predicting regions
+        # Layer 4 - Softmax
         a_4 = tf.matmul(z_3, self.W_4) + self.b_4
+        z_4 = tf.nn.softmax(a_4)
 
         # Final output
-        self.output = a_4
+        self.output = z_4
 
     def init_optimizer(self):
         # Minimize mean squared error
-        self.cost = tf.reduce_mean(tf.square(self.y - self.output))
+        self.cost = tf.reduce_mean(-tf.reduce_sum(self.y * tf.log(tf.clip_by_value(self.output, 1e-10, 1.0)), reduction_indices=[1]))
 
         # Gradient Descent
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)

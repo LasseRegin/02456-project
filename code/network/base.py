@@ -91,6 +91,7 @@ class Network:
                 self.x: x,
                 self.y: y
             })
+
         else:
             # Without optimization step
             loss = session.run(self.cost, feed_dict={

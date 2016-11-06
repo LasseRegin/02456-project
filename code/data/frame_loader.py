@@ -74,14 +74,15 @@ class FrameLoader:
             print('Creating inputs numpy memmap file..')
             inputs_memmap = np.memmap(
                 filename=self.inputs_memmap_filename,
-                dtype='uint8',
+                dtype='float32',
                 mode='w+',
                 shape=self.inputs_memmap_size
             )
 
             # Write frames into memmap
             for i, frame in enumerate(self.get_frames()):
-                inputs_memmap[i, :, :, :] = frame.image
+                image_preprocessed = frame.image - frame.image.mean()
+                inputs_memmap[i, :, :, :] = image_preprocessed.astype('float32')
             del inputs_memmap
 
         if not os.path.isfile(self.targets_memmap_filename):
@@ -107,7 +108,7 @@ class FrameLoader:
 
         self.inputs_memmap = np.memmap(
             filename=self.inputs_memmap_filename,
-            dtype='uint8',
+            dtype='float32',
             mode='c',
             shape=self.inputs_memmap_size
         )
