@@ -69,19 +69,22 @@ class BallPositionPDF:
 def my_norm(a,b):
     return np.sqrt((a[0]-b[0])**2+(a[1]-b[1])**2)
            
-def target_output(is_ball,b,x_max,y_max):
+
+def target_output(is_ball,b,x_max,y_max): # specify b=(y,x)
     output = np.zeros((x_max*y_max+1,1))
-    if not is_ball:
+    if not is_ball or b==(-1,-1):
         output[-1]=1
         return output        
     
-    mat = np.zeros((x_max,y_max))
-    for i in range(x_max):
-        for j in range(y_max):
+    mat = np.zeros((y_max,x_max))
+    for i in range(y_max):
+        for j in range(x_max):
             if np.abs(b[0]-i)<=1 and np.abs(b[1]-j)<=1:
                 if b!=(i,j):
                     mat[i,j] = 1/my_norm(b,(i,j))/2
                 else: mat[i,j]=1
+    
     output[0:x_max*y_max]=mat.reshape((x_max*y_max,1))
+    return output
     
     return output
