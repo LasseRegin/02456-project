@@ -11,7 +11,7 @@ SHOW_PLOT = 'SHOW_PLOT' in os.environ
 
 # Training parameters
 NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
-LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-5))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-3))
 
 # Intialize frame loader
 frame_loader = data.FrameLoader()
@@ -37,14 +37,14 @@ with tf.Session() as sess:
         train_loss = 0.
         train_batches = 0
         for images, targets in frame_loader.train:
-            train_loss += nn.train_op(session=sess, x=images - images.mean(), y=targets)
+            train_loss += nn.train_op(session=sess, x=images / images.std(), y=targets)
             train_batches += 1
         train_loss /= train_batches
 
         val_loss = 0.
         val_batches = 0
         for images, targets in frame_loader.val:
-            val_loss += nn.val_op(session=sess, x=images - images.mean(), y=targets)
+            val_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
             val_batches += 1
         val_loss /= val_batches
 
