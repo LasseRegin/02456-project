@@ -116,6 +116,8 @@ class ConvolutionalClassifier(Network):
         # Gradient Descent
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
+        self.grads_and_vars = optimizer.compute_gradients(self.cost, [self.conv_1_W, self.conv_2_W, self.W_3, self.W_4])
+
         # Define optimization operation step
         self.optimizer_step = optimizer.minimize(self.cost)
 
