@@ -1,10 +1,13 @@
 from __future__ import print_function, division, absolute_import
 
 import os
+import math
 import tensorflow as tf
 from tensorflow.python.platform import gfile
 
 import tensorflow.contrib.slim as slim
+
+import data
 
 # Input, bottleneck and output size.
 MODEL_INPUT_WIDTH = 299
@@ -38,32 +41,20 @@ with gfile.FastGFile(MODEL_PATH, 'rb') as f:
         return_elements=[BOTTLENECK_TENSOR_NAME, INPUT_TENSOR_NAME]
     )
 
-# Create final training operations
-with tf.name_scope('targets'):
-    one_hot_target_tensor = tf.placeholder(
-        tf.float32, [None, MODEL_OUTPUT_SIZE]
-    )
 
-layer_name = 'final_training_ops'
-with slim.arg_scope([slim.fully_connected],
-                    weights_initializer=tf.truncated_normal_initializer(
-                        stddev=0.001),
-                    weights_regularizer=slim.l2_regularizer(0.0005),
-                    scope=layer_name):
-    logits = slim.fully_connected(bottleneck_tensor,
-                                  MODEL_OUTPUT_SIZE,
-                                  activation_fn=None)
+MAX_VIDEOS = math.inf
+if 'RUNNING_ON_LOCAL' in os.environ:
+    MAX_VIDEOS = 4
 
-final_tensor = tf.nn.softmax(logits, name=FINAL_TENSOR_NAME)
-
-cross_entropy = slim.losses.softmax_cross_entropy(
-    logits, one_hot_target_tensor, scope='cross_entropy')
-
-optimizer = tf.train.AdamOptimizer(LEARNING_RATE)
-
-with tf.name_scope('train'):
-    train_op = slim.learning.create_train_op(cross_entropy, optimizer)
+# Intialize frame loader
+frame_loader = data.FrameLoader(max_videos=MAX_VIDEOS)
 
 
+with tf.Session() as sess:
+    for image, target in frame_loader:
+        output = sess.run(bottleneck_tensor, feed_dict={
+            input_tensor: image.reshape((1,) + image.shape)
+        })
+        print(output)
 
 #return train_op, one_hot_target_tensor, final_tensor

@@ -15,7 +15,6 @@ FILEPATH = os.path.dirname(os.path.abspath(__file__))
 
 class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
-    MEMMAP_FILE = os.path.join(DATA_FOLDER, 'memmap_file.dat')
 
     def __init__(self, cells_x=20, cells_y=12, **kwargs):
 

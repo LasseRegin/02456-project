@@ -10,7 +10,8 @@ MAX_VIDEOS = math.inf
 if 'RUNNING_ON_LOCAL' in os.environ:
     MAX_VIDEOS = 4
 
-frame_loader = data.FrameLoader(max_videos=MAX_VIDEOS)
+#frame_loader = data.FrameLoader(max_videos=MAX_VIDEOS)
+frame_loader = data.FeatureLoader(max_videos=MAX_VIDEOS)
 frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader, cache=frame_loader.data_can_fit_in_memory())
 
 for i in range(0, 2):
