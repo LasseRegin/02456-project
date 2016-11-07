@@ -37,8 +37,12 @@ class ValidationMinibatches:
         ## TODO: Is this necessary?
         if self.cache:
             print('Loading data into memory..')
-            self.inputs  = self.frame_iterator.inputs_memmap[...]
-            self.targets = self.frame_iterator.targets_memmap[...]
+            #self.inputs  = self.frame_iterator.inputs_memmap[...]
+            #self.targets = self.frame_iterator.targets_memmap[...]
+            self.inputs  = self.frame_iterator.inputs_memmap[:]
+            self.targets = self.frame_iterator.targets_memmap[:]
+            print(type(self.inputs))
+            print(type(self.frame_iterator.inputs_memmap))
 
 
     @property
