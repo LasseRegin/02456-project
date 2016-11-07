@@ -12,14 +12,14 @@ SHOW_PLOT = 'SHOW_PLOT' in os.environ
 
 # Training parameters
 NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
-LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-3))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-2))
 
 MAX_VIDEOS = math.inf
 if 'RUNNING_ON_LOCAL' in os.environ:
     MAX_VIDEOS = 4
 
 # Intialize frame loader
-frame_loader = data.FrameLoader()
+frame_loader = data.FrameLoader(max_videos=MAX_VIDEOS)
 height, width = frame_loader.data.target_height, frame_loader.data.target_width
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
