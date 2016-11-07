@@ -49,6 +49,8 @@ Lasse
 * Ask Philip about the loss of spatial information using the Inception graph
 * Create persistency for Inception graph output
 * Test with logistic regression
+
+
 Nikolaj
 * Finish video evaluation script
 
