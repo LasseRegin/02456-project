@@ -1,6 +1,6 @@
 
 from utils.filters import BallFoundFilter
-from utils.target_types import BallPositionPDF, BallPositionPoint, heatmap_output
+from utils.target_types import BallPositionPDF, BallPositionPoint, target_output
 from utils.minibatch import Minibatch, MinibatchUncached
 from utils.misc import ReshapeAndStandardize
 from utils.validation import ValidationMinibatches
