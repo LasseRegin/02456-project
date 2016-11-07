@@ -104,19 +104,23 @@ class FrameLoader:
                     cells_y=self.cells_y
                 )
 
+            targets_memmap.flush()
+            targets_memmap.close()
             del targets_memmap
 
         self.inputs_memmap = np.memmap(
             filename=self.inputs_memmap_filename,
             dtype='float32',
-            mode='c',
+            #mode='c',
+            mode='r',
             shape=self.inputs_memmap_size
         )
 
         self.targets_memmap = np.memmap(
             filename=self.targets_memmap_filename,
             dtype='float32',
-            mode='c',
+            #mode='c',
+            mode='r',
             shape=self.targets_memmap_size
         )
 
