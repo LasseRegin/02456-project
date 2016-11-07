@@ -10,7 +10,7 @@ import tensorflow as tf
 
 # Training parameters
 NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
-LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-3))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-5))
 
 MAX_VIDEOS = math.inf
 if 'RUNNING_ON_LOCAL' in os.environ:

@@ -3,6 +3,8 @@ code/data/raw
 code/network/models
 code/utils/runs
 
+# Temp file
+code/output.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
