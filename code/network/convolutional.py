@@ -15,14 +15,14 @@ class ConvolutionalClassifier(Network):
             initial_value=tf.truncated_normal([5, 5, 3, 16], stddev=0.1),
             name='weights-conv-layer-1'
         )
-        self.conv_1_b = tf.Variable(initial_value=tf.zeros([16]), name='biases-layer-1')
+        self.conv_1_b = tf.Variable(initial_value=tf.constant(0.1, shape=[16])), name='biases-layer-1')
 
         # Layer 2
         self.conv_2_W = tf.Variable(
             initial_value=tf.truncated_normal([5, 5, 16, 16], stddev=0.1),
             name='weights-conv-layer-2'
         )
-        self.conv_2_b = tf.Variable(initial_value=tf.zeros([16]), name='biases-layer-2')
+        self.conv_2_b = tf.Variable(initial_value=tf.constant(0.1, shape=[16])), name='biases-layer-2')
 
         # Layer 3
         new_img_shape = np.ceil([self.input_shape[1] / 4, self.input_shape[2] / 4]).astype('int')
