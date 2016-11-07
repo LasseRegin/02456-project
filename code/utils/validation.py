@@ -39,8 +39,8 @@ class ValidationMinibatches:
             print('Loading data into memory..')
             #self.inputs  = self.frame_iterator.inputs_memmap[...]
             #self.targets = self.frame_iterator.targets_memmap[...]
-            self.inputs  = self.frame_iterator.inputs_memmap[:]
-            self.targets = self.frame_iterator.targets_memmap[:]
+            self.inputs  = self.frame_iterator.inputs_memmap.tolist()
+            self.targets = self.frame_iterator.targets_memmap.tolist()
             print(type(self.inputs))
             print(type(self.frame_iterator.inputs_memmap))
 
