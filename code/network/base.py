@@ -92,10 +92,10 @@ class Network:
                 self.x: x,
                 self.y: y
             })
-            print('grads')
-            for i, (grads, _vars) in enumerate(grads_and_vars):
-                print(i)
-                print(grads.mean())
+            #print('grads')
+            #for i, (grads, _vars) in enumerate(grads_and_vars):
+            #    print(i)
+            #    print(grads.mean())
 
         else:
             # Without optimization step
