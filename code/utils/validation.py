@@ -51,14 +51,10 @@ class ValidationMinibatches:
             idx_to   = min((batch_number + 1) * self.batch_size, self.n_train)
             indices  = self.order_train[idx_from:idx_to]
 
-            yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
-
-            # if self.cache:
-                # yield self.inputs[indices], self.targets[indices]
-            # else:
-                # Sort for faster h5py slicing
-                # indices = sorted(indices)
-                # yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
+            if self.cache:
+                yield self.inputs[indices], self.targets[indices]
+            else:
+                yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
     @property
@@ -71,14 +67,10 @@ class ValidationMinibatches:
             idx_to   = min((batch_number + 1) * self.batch_size, self.n_val)
             indices  = self.order_val[idx_from:idx_to]
 
-            yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
-
-            # if self.cache:
-            #     yield self.inputs[indices], self.targets[indices]
-            # else:
-            #     # Sort for faster h5py slicing
-            #     indices = sorted(indices)
-            #     yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
+            if self.cache:
+                yield self.inputs[indices], self.targets[indices]
+            else:
+                yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
     @property
@@ -91,14 +83,10 @@ class ValidationMinibatches:
             idx_to   = min((batch_number + 1) * self.batch_size, self.n_test)
             indices  = self.order_test[idx_from:idx_to]
 
-            yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
-
-            # if self.cache:
-            #     yield self.inputs[indices], self.targets[indices]
-            # else:
-            #     # Sort for faster h5py slicing
-            #     indices = sorted(indices)
-            #     yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
+            if self.cache:
+                yield self.inputs[indices], self.targets[indices]
+            else:
+                yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
 
