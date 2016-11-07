@@ -35,14 +35,10 @@ class ValidationMinibatches:
         self.batch_count_test  = math.ceil(self.n_test  / self.batch_size)
 
         ## TODO: Is this necessary?
-        if self.cache:
-            print('Loading data into memory..')
-            #self.inputs  = self.frame_iterator.inputs_memmap[...]
-            #self.targets = self.frame_iterator.targets_memmap[...]
-            self.inputs  = self.frame_iterator.inputs_memmap.tolist()
-            self.targets = self.frame_iterator.targets_memmap.tolist()
-            print(type(self.inputs))
-            print(type(self.frame_iterator.inputs_memmap))
+        #if self.cache:
+        #    print('Loading data into memory..')
+        #    self.inputs  = self.frame_iterator.inputs_memmap[...]
+        #    self.targets = self.frame_iterator.targets_memmap[...]
 
 
     @property
@@ -58,6 +54,8 @@ class ValidationMinibatches:
             if self.cache:
                 yield self.inputs[indices], self.targets[indices]
             else:
+                # Sort for faster h5py slicing
+                indices = sorted(indices)
                 yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
@@ -74,6 +72,8 @@ class ValidationMinibatches:
             if self.cache:
                 yield self.inputs[indices], self.targets[indices]
             else:
+                # Sort for faster h5py slicing
+                indices = sorted(indices)
                 yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
@@ -90,6 +90,8 @@ class ValidationMinibatches:
             if self.cache:
                 yield self.inputs[indices], self.targets[indices]
             else:
+                # Sort for faster h5py slicing
+                indices = sorted(indices)
                 yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
