@@ -18,9 +18,6 @@ for i in range(0, 2):
     start = time.time()
     count = 0
     for inputs, targets in frame_loader.train:
-        print(inputs)
-        print(inputs.shape)
-        print(inputs.dtype)
         count += 1
     print('FrameLoader spent %.4fs' % (time.time() - start))
     print('found %d' % (count))

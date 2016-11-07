@@ -8,28 +8,30 @@ import network
 import numpy as np
 import tensorflow as tf
 
+SHOW_PLOT = 'SHOW_PLOT' in os.environ
+
 # Training parameters
 NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
-LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-3))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-4))
 
 MAX_VIDEOS = math.inf
 if 'RUNNING_ON_LOCAL' in os.environ:
     MAX_VIDEOS = 4
 
 # Intialize frame loader
-frame_loader = data.FrameLoader(max_videos=MAX_VIDEOS)
-height, width = frame_loader.data.target_height, frame_loader.data.target_width
+frame_loader = data.FeatureLoader(max_videos=MAX_VIDEOS)
+input_size = frame_loader.BOTTLENECK_TENSOR_SIZE
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
 
-# Split in train and validation
+# Split in train, validation and test
 frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader, cache=frame_loader.data_can_fit_in_memory())
 
 # Setup network
-nn = network.ConvolutionalClassifier(name='conv-model-1',
-                                     input_shape=(None, height, width, 3),
-                                     target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
-                                     verbose=True)
+nn = network.LogisticClassifier(name='simple-features-model-1',
+                                input_shape=(None, input_size),
+                                target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
+                                verbose=True)
 
 with tf.Session() as sess:
     nn.init(sess)
