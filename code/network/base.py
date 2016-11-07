@@ -88,10 +88,14 @@ class Network:
     def compute_loss(self, session, x, y, optimize):
         if optimize:
             # With optimization step
-            _, loss = session.run([self.optimizer_step, self.cost], feed_dict={
+            _, loss, w, b = session.run([self.optimizer_step, self.cost, self.W_1, self.b_1], feed_dict={
                 self.x: x,
                 self.y: y
             })
+            print('W')
+            print(w)
+            print('b')
+            print(b)
 
         else:
             # Without optimization step
