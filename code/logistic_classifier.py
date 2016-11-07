@@ -36,7 +36,7 @@ nn = network.LogisticClassifier(name='simple-model-1',
 with tf.Session() as sess:
     nn.init(sess)
 
-    plot = utils.LossPlot(show=SHOW_PLOT)
+    lossTracker = utils.LossTracker(name=nn.name, num_epochs=NUM_EPOCHS, verbose=True)
     for epoch in range(0, NUM_EPOCHS):
 
         train_loss = 0.
@@ -53,11 +53,7 @@ with tf.Session() as sess:
             val_batches += 1
         val_loss /= val_batches
 
-        plot.update(epoch=epoch, loss=train_loss)
-
-        print('Epoch %d/%d' % (epoch+1, NUM_EPOCHS))
-        print('Train loss: %g' % (train_loss))
-        print('Val loss: %g' % (val_loss))
+        lossTracker.addEpoch(train_loss=train_loss, val_loss=val_loss)
 
     # Save model
     nn.save(sess)
@@ -66,9 +62,9 @@ with tf.Session() as sess:
     test_loss = 0.
     test_batches = 0
     for images, targets in frame_loader.test:
-        test_loss += nn.val_op(session=sess, x=images - images.mean(), y=targets)
+        test_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
         test_batches += 1
     test_loss /= test_batches
 
-    print('')
-    print('Final test loss: %g' % (test_loss))
+    lossTracker.addFinalTestLoss(test_loss)
+    lossTracker.save()
