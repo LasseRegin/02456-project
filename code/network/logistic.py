@@ -13,6 +13,8 @@ class LogisticClassifier(Network):
         self.x_reshaped = tf.reshape(self.x, shape=[-1, total_pixels])
 
         # Weights for layer 1
+        # NOTE: Gradients seems more stable when initializing W to zeros.
+        #       This can only be used with logistic regression.
         #self.W_1 = tf.Variable(tf.random_normal([total_pixels, self.target_shape[1]], stddev=0.35), name='weights-layer-1')
         #self.W_1 = tf.Variable(tf.random_normal([total_pixels, self.target_shape[1]], stddev=0.10), name='weights-layer-1')
         self.W_1 = tf.Variable(tf.zeros([total_pixels, self.target_shape[1]]), name='weights-layer-1')
@@ -32,8 +34,8 @@ class LogisticClassifier(Network):
         self.cost = tf.reduce_mean(-tf.reduce_sum(self.y * tf.log(tf.clip_by_value(self.output, 1e-10, 1.0)), reduction_indices=[1]))
 
         # Gradient Descent
-        #optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate)
+        optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        #optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate)
 
         self.grads_and_vars = optimizer.compute_gradients(self.cost, [self.W_1])
 
