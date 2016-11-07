@@ -35,10 +35,18 @@ class ValidationMinibatches:
         self.batch_count_test  = math.ceil(self.n_test  / self.batch_size)
 
         ## TODO: Is this necessary?
-        #if self.cache:
-        #    print('Loading data into memory..')
-        #    self.inputs  = self.frame_iterator.inputs_memmap[...]
-        #    self.targets = self.frame_iterator.targets_memmap[...]
+        if self.cache:
+            print('Loading data into memory..')
+            #self.inputs  = self.frame_iterator.inputs_memmap[...]
+            #self.targets = self.frame_iterator.targets_memmap[...]
+            input_data = []
+            target_data = []
+            for i in range(0, frame_count):
+                input_data.append(self.frame_iterator.inputs_memmap[i])
+                target_data.append(self.frame_iterator.targets_memmap[i])
+
+            self.inputs  = np.asarray(input_data,  dtype=self.frame_iterator.inputs_memmap.dtype)
+            self.targets = np.asarray(target_data, dtype=self.frame_iterator.targets_memmap.dtype)
 
 
     @property
