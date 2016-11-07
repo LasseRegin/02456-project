@@ -85,7 +85,6 @@ class FrameLoader:
                 #inputs_memmap[i, :, :, :] = image_preprocessed.astype('float32')
                 inputs_memmap[i, :, :, :] = frame.image
             inputs_memmap.flush()
-            inputs_memmap.close()
             del inputs_memmap
 
         if not os.path.isfile(self.targets_memmap_filename):
@@ -108,7 +107,6 @@ class FrameLoader:
                 )
 
             targets_memmap.flush()
-            targets_memmap.close()
             del targets_memmap
 
         self.inputs_memmap = np.memmap(
