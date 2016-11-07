@@ -1,4 +1,16 @@
 
+# TODOs
+
+Lasse
+* Ask Philip about the loss of spatial information using the Inception graph
+* Create persistency for Inception graph output
+* Test with logistic regression
+
+
+Nikolaj
+* Finish video evaluation script
+
+
 # Meetings
 
 ## 10/10-2016:
@@ -43,7 +55,10 @@ For next week
 * Change to predicting regions with softmax (maybe use weighted)
   * Split in 20*12 regions and create targets being 0's in all regions
 
-# TODOs
+## 7/10-2016
+
+For next week do:
+
 
 Lasse
 * Ask Philip about the loss of spatial information using the Inception graph
