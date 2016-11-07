@@ -57,7 +57,8 @@ class ConvolutionalClassifier(Network):
         )
 
         # Layer 1 - Non-linearity
-        relu_1 = tf.nn.relu(tf.nn.bias_add(bn_1, self.conv_1_b), name='relu-layer-1')
+        #relu_1 = tf.nn.relu(tf.nn.bias_add(bn_1, self.conv_1_b), name='relu-layer-1')
+        relu_1 = tf.nn.relu(tf.nn.bias_add(conv_1, self.conv_1_b), name='relu-layer-1')
 
         # Layer 1 - Pooling
         pool_1 = tf.nn.max_pool(
@@ -78,7 +79,8 @@ class ConvolutionalClassifier(Network):
         )
 
         # Layer 2 - Non-linearity
-        relu_2 = tf.nn.relu(tf.nn.bias_add(bn_2, self.conv_2_b), name='relu-layer-2')
+        #relu_2 = tf.nn.relu(tf.nn.bias_add(bn_2, self.conv_2_b), name='relu-layer-2')
+        relu_2 = tf.nn.relu(tf.nn.bias_add(conv_2, self.conv_2_b), name='relu-layer-2')
 
         # Layer 2 - Pooling
         pool_2 = tf.nn.max_pool(
