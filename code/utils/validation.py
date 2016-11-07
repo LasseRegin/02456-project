@@ -35,10 +35,10 @@ class ValidationMinibatches:
         self.batch_count_test  = math.ceil(self.n_test  / self.batch_size)
 
         ## TODO: Is this necessary?
-        #if self.cache:
-        #    print('Loading data into memory..')
-        #    self.inputs  = self.frame_iterator.inputs_memmap[...]
-        #    self.targets = self.frame_iterator.targets_memmap[...]
+        if self.cache:
+            print('Loading data into memory..')
+            self.inputs  = self.frame_iterator.inputs_memmap[...]
+            self.targets = self.frame_iterator.targets_memmap[...]
 
 
     @property

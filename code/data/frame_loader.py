@@ -111,16 +111,14 @@ class FrameLoader:
         self.inputs_memmap = np.memmap(
             filename=self.inputs_memmap_filename,
             dtype='float32',
-            #mode='c',
-            mode='r',
+            mode='c',
             shape=self.inputs_memmap_size
         )
 
         self.targets_memmap = np.memmap(
             filename=self.targets_memmap_filename,
             dtype='float32',
-            #mode='c',
-            mode='r',
+            mode='c',
             shape=self.targets_memmap_size
         )
 
