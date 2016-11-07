@@ -33,7 +33,7 @@ class Network:
         self.init_op = tf.initialize_all_variables()
 
         # Add ops to save and restore all the variables
-        self.saver = tf.train.Saver()
+        self.saver = tf.train.Saver(write_version=tf.train.SaverDef.V2)
 
     def init(self, session):
         session.run(self.init_op)
@@ -91,6 +91,7 @@ class Network:
                 self.x: x,
                 self.y: y
             })
+
         else:
             # Without optimization step
             loss = session.run(self.cost, feed_dict={

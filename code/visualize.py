@@ -2,14 +2,24 @@
 import data
 from matplotlib import pyplot as plt
 
-frame_loader = data.FrameLoader(shuffle=True)
+#frame_loader = data.FrameLoader()
+frame_loader = data.FrameLoader(max_videos=4)
 
 for i, (image, target) in enumerate(frame_loader):
-    fig = plt.figure(figsize=(20,10))
-    print('Pixel coordinates')
-    print(target[0]*image.shape[1],target[1]*image.shape[0])
-    plt.imshow(image, cmap='gray')
+    #if i < 5500:    continue
+    if i < 1000: continue
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 10))
+
+    # Temp fix for getting proper value range
+    image -= image.min()
+    image /= image.max()
+    image *= 255
+    image = image.astype('uint8')
+
+    axes[0].imshow(image)
+    axes[1].imshow(target[0:-1].reshape((12, 20)))
 
     plt.show()
-    if i > 20:
-        break
+    if i > 1010: break
+    #if i > 5520:    break

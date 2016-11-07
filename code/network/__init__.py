@@ -1,4 +1,4 @@
 
 from network.base import Network
-from network.simple import SimpleRegressor
-from network.convolutional import ConvolutionalRegressor
+from network.logistic import LogisticClassifier
+from network.convolutional import ConvolutionalClassifier

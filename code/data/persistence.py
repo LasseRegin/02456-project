@@ -4,6 +4,7 @@ import os
 import json
 import hashlib
 import subprocess
+import math
 from urllib.request import urlopen, urlretrieve
 
 FILEPATH = os.path.dirname(os.path.abspath(__file__))
@@ -17,22 +18,17 @@ class DataPersistence:
 
         `info_url`      URL to JSON file containing video + annotation information.
         `max_videos`    Restricts the number of loaded videos to `max_videos`.
-        `dim_ds_rate`   Indicates the dimensionality downsample rate used when
-                        extracting frames using `ffmpeg`. E.g. `dim_ds_rate`=2
-                        will halve the width and height.
     """
     ORIGINAL_WIDTH  = 3840
     ORIGINAL_HEIGHT = 2160
 
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
     def __init__(self, info_url='http://recoordio-zoo.s3-eu-west-1.amazonaws.com/dataset/09102016.json',
-                 max_videos=None, dim_ds_rate=8):
-        self.dim_ds_rate = dim_ds_rate
+                 max_videos=math.inf, target_width=299, target_height=299):
+        # Set target shapes
+        self.target_width = target_width
+        self.target_height = target_height
         self.videos = []
-
-        # Determine new shapes if downsampling is wanted
-        self.target_width  = self.ORIGINAL_WIDTH  // self.dim_ds_rate
-        self.target_height = self.ORIGINAL_HEIGHT // self.dim_ds_rate
 
         # Make sure raw folder exists
         self.make_folder(foldername=self.DATA_FOLDER)
@@ -55,10 +51,13 @@ class DataPersistence:
         video_count = 0
         for video in sorted(data['videos'], key=lambda vid: vid['hash']):
             for sample in video['samples']:
+                # If video sample has no annotation just continue
+                if not 'human_annotation' in sample:    continue
+
                 url = sample['s3video']
                 basename = os.path.basename(url)
 
-                # Determine filename based on downsample rate
+                # Create filename
                 filename = os.path.join(self.DATA_FOLDER, basename)
 
                 # Download video file if needed
@@ -67,72 +66,81 @@ class DataPersistence:
                     urlretrieve(url, filename)
 
                 # Create downsample video if needed and video required
-                filename_ds = self.construct_ds_filename(filename)
-                if self.dim_ds_rate > 1:
-                    if not os.path.isfile(filename_ds):
-                        print('Creating downsampled video')
-                        self.downsample_video(
+                downsample = self.target_width != self.ORIGINAL_WIDTH or self.target_height != self.ORIGINAL_HEIGHT
+                foldername = self.construct_ds_foldername(filename)
+                if downsample:
+                    self.make_folder(foldername=foldername)
+                    frame_filenames = self.get_frames_from_folder(foldername=foldername)
+
+                    if len(frame_filenames) != sample['frame_count']:
+                        self.extract_frames(
                             video_path=filename,
                             target_width=self.target_width,
                             target_height=self.target_height,
-                            target_framerate=sample['fps_nominator'] / sample['fps_denominator'],
-                            target_video_path=filename_ds
+                            folder_path=foldername
                         )
+                    #else:
+                    #    # Delete video file again
+                    #    os.remove(filename)
 
-                # Get annotations if video sample contains annotations
-                if 'human_annotation' in sample:
-                    url_anno = sample['human_annotation']['s3annotation']
-                    filename_anno = os.path.join(self.DATA_FOLDER, os.path.basename(url_anno))
+                # Get video annotations
+                url_anno = sample['human_annotation']['s3annotation']
+                filename_anno = os.path.join(self.DATA_FOLDER, os.path.basename(url_anno))
 
-                    if not os.path.isfile(filename_anno):
-                        urlretrieve(url_anno, filename=filename_anno)
+                # Download annotation file if we don't have it already
+                if not os.path.isfile(filename_anno):
+                    urlretrieve(url_anno, filename=filename_anno)
 
-                    self.videos.append({
-                        'filename': filename_ds if self.dim_ds_rate > 1 else filename,
-                        'annotation': filename_anno,
-                        'frame_count': sample['frame_count']
-                    })
-                    video_count += 1
+                self.videos.append({
+                    'foldername': foldername,
+                    'annotation': filename_anno,
+                    'frame_count': sample['frame_count']
+                })
+                video_count += 1
 
                 # If the argument `max_videos` is provided we limit the number of
                 # videos we fetch.
-                if max_videos is not None and video_count >= max_videos:
+                if video_count >= max_videos:
                     break
-            if max_videos is not None and video_count >= max_videos:
+            if video_count >= max_videos:
                 break
 
-    def construct_ds_filename(self, filename):
+    def construct_ds_foldername(self, filename):
         filename_splitted = filename.split('.')
-        filename = ''.join(filename_splitted[0:len(filename_splitted)-1])
+        foldername = ''.join(filename_splitted[0:-1])
 
-        # Add dimensionality reduction term
-        filename += '-dim-ds-x%d' % (self.dim_ds_rate)
+        # Add dimensionality term
+        foldername += '-dim-%d-x-%d' % (self.target_width, self.target_height)
 
-        filename += '.%s' % (filename_splitted[-1])
-        return filename
+        return foldername
 
     def make_folder(self, foldername):
         if not os.path.isdir(foldername):
             os.mkdir(foldername)
 
-    def downsample_video(self, video_path, target_width, target_height,
-                         target_framerate, target_video_path):
+    def extract_frames(self, video_path, target_width, target_height, folder_path):
+        print('Extracting frames to %s' % (folder_path))
+
         # Make sure we are in the data folder
         os.chdir(FILEPATH)
+
+        # Make dir for frames
+        #target_video_path = '%s/%%d.bmp' % (folder_path)
+        target_video_path = '%s/%%d.png' % (folder_path)
 
         # Run command
         subprocess.call(['ffmpeg',
             '-i', video_path,
-            '-crf', '18',
             '-s', '%dx%d' % (target_width, target_height),
-            '-r', str(target_framerate),
-            '-an', # Remove audio track
             target_video_path
         ])
 
+    def get_frames_from_folder(self, foldername):
+        return list(filter(lambda name: not name.startswith('.'), os.listdir(foldername)))
+
     def __hash__(self):
         m = hashlib.md5()
-        joined_str = ''.join(sorted([v['filename'] for v in self.videos])).encode('utf-8')
+        joined_str = ''.join(sorted([v['foldername'] for v in self.videos])).encode('utf-8')
         m.update(joined_str)
         return int(m.hexdigest(), 16)
 

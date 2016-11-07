@@ -3,151 +3,137 @@ from __future__ import division, generators, print_function, unicode_literals, w
 import os
 import sys
 import json
-import h5py
+import math
 import psutil
-import imageio
 import random
+import imageio
 import numpy as np
 
 from data.persistence import DataPersistence
 
 FILEPATH = os.path.dirname(os.path.abspath(__file__))
 
-
 class FrameLoader:
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
-    HDF5_FILE = os.path.join(DATA_FOLDER, 'data.hdf5')
+    MEMMAP_FILE = os.path.join(DATA_FOLDER, 'memmap_file.dat')
 
-    def __init__(self, shuffle=True, validation_group='train', **kwargs):
+    def __init__(self, cells_x=20, cells_y=12, **kwargs):
+
+        # Heatmap dimensions
+        self.cells_x = cells_x
+        self.cells_y = cells_y
+
         # Check data persistency
         self.data = DataPersistence(**kwargs)
 
         # Get unique identifier for specific data
         self.data_id = str(hash(self.data))
 
-        # Check if data is available
-        if not self.dataset_available():
-            self.create_dataset()
+        # Load frame filenames
+        self.frames = []
+        for video in self.data.videos:
+            with open(video['annotation'], 'r') as f:
+                annotation = json.load(f)
 
-        # Load datafile
-        f = h5py.File(self.HDF5_FILE, 'r')
-        group = f[self.data_id]
+            balls = annotation['balls']
+            for i in range(0, video['frame_count']):
+                # Get ball info
+                ball = balls.get(str(i), None)
+                found = ball is not None
 
-        if not validation_group in ['train', 'test']:
-            raise KeyError('Wrong validation_group key provided')
+                if found:
+                    x = ball['x'] / self.data.ORIGINAL_WIDTH
+                    y = ball['y'] / self.data.ORIGINAL_HEIGHT
+                else:
+                    x = None
+                    y = None
 
-        val_group = group[validation_group]
-        self.inputs  = val_group['inputs']
-        self.targets = val_group['targets']
 
-        # Determine number of frames in dataset
-        self.frame_count = self.inputs.shape[0]
-        self.dtype = self.inputs.dtype
-        self.shape = self.inputs.shape
+                # Define frame filename
+                frame_filename = '%s/%s.png' % (video['foldername'], i + 1)
 
-        # Determine order of frames
-        if shuffle:
-            self.order = np.random.permutation(self.frame_count)
-        else:
-            self.order = range(0, self.frame_count)
+                self.frames.append(Frame(
+                    x=x,
+                    y=y,
+                    found=found,
+                    filename=frame_filename,
+                    foldername=video['foldername']
+                ))
+
+        # Frame count
+        self.frame_count = len(self.frames)
+
+        # Create memmory mapped numpy arrays
+        self.inputs_memmap_filename = os.path.join(self.DATA_FOLDER, '%s-inputs.dat' % (self.data_id))
+        self.targets_memmap_filename = os.path.join(self.DATA_FOLDER, '%s-targets-%d-%d.dat' % (self.data_id, self.cells_x, self.cells_y))
+        self.inputs_memmap_size = (self.frame_count, self.data.target_height, self.data.target_width, 3)
+        self.targets_memmap_size = (self.frame_count, self.cells_x * self.cells_y + 1)
+
+        if not os.path.isfile(self.inputs_memmap_filename):
+            # Create numpy memmap file
+            print('Creating inputs numpy memmap file..')
+            inputs_memmap = np.memmap(
+                filename=self.inputs_memmap_filename,
+                dtype='float32',
+                mode='w+',
+                shape=self.inputs_memmap_size
+            )
+
+            # Write frames into memmap
+            for i, frame in enumerate(self.get_frames()):
+                image_preprocessed = frame.image - frame.image.mean()
+                inputs_memmap[i, :, :, :] = image_preprocessed.astype('float32')
+            inputs_memmap.flush()
+            del inputs_memmap
+
+        if not os.path.isfile(self.targets_memmap_filename):
+            # Create numpy memmap file
+            print('Creating targets numpy memmap file..')
+            targets_memmap = np.memmap(
+                filename=self.targets_memmap_filename,
+                dtype='float32',
+                mode='w+',
+                shape=self.targets_memmap_size
+            )
+
+            for i, frame in enumerate(self.get_frames()):
+                targets_memmap[i, :] = ballPositionHeatMap(
+                    found=frame.found,
+                    x=frame.x,
+                    y=frame.y,
+                    cells_x=self.cells_x,
+                    cells_y=self.cells_y
+                )
+
+            targets_memmap.flush()
+            del targets_memmap
+
+        self.inputs_memmap = np.memmap(
+            filename=self.inputs_memmap_filename,
+            dtype='float32',
+            mode='c',
+            shape=self.inputs_memmap_size
+        )
+
+        self.targets_memmap = np.memmap(
+            filename=self.targets_memmap_filename,
+            dtype='float32',
+            mode='c',
+            shape=self.targets_memmap_size
+        )
+
 
     def __iter__(self):
         print('FrameLoader __iter__ called')
 
-        for i in self.order:
-            yield self.inputs[i], self.targets[i]
-
-    def dataset_available(self):
-        f = h5py.File(self.HDF5_FILE, 'a')
-        is_available = self.data_id in f
-        f.close()
-        return is_available
-
-    def create_dataset(self):
-        print('Creating dataset..')
-
-        # Load file with read/write permissions
-        f = h5py.File(self.HDF5_FILE, 'a')
-
-        # Create group for the dataset
-        group = f.create_group(self.data_id)
-
-        # Create Training and Test group
-        group_train = group.create_group('train')
-        group_test  = group.create_group('test')
-
-        try:
-            # We need to loop through the frames to determine the size of the dataset
-            frame_count = sum(1 for _ in self.get_frames())
-
-            # Take away 1/4 of the data for testing
-            n_test  = int(frame_count // 4)
-            n_train = frame_count - n_test
-
-            # Initialize datasets
-            inputs_data_size_train  = (n_train, self.data.target_height, self.data.target_width)
-            targets_data_size_train = (n_train, 2)
-            inputs_train  = group_train.create_dataset('inputs',  inputs_data_size_train,  dtype='float32')
-            targets_train = group_train.create_dataset('targets', targets_data_size_train, dtype='float32')
-
-            inputs_data_size_test  = (n_test, self.data.target_height, self.data.target_width)
-            targets_data_size_test = (n_test, 2)
-            inputs_test  = group_test.create_dataset('inputs',  inputs_data_size_test,  dtype='float32')
-            targets_test = group_test.create_dataset('targets', targets_data_size_test, dtype='float32')
-
-            for i, frame in enumerate(self.get_frames()):
-                # Preprocess frame
-                image = frame.image.astype('float32')
-                image -= image.mean()
-                target = np.array([frame.x, frame.y])
-
-                # Save observation
-                if i >= n_train:
-                    idx = i % n_train
-                    inputs_test[idx, :, :] = image
-                    targets_test[idx, :] = target
-                else:
-                    inputs_train[i, :, :] = image
-                    targets_train[i, :] = target
-
-        except Exception as e:
-            # If anything went wrong delete the group again
-            print(e)
-            del f[self.data_id]
-        except KeyboardInterrupt as e:
-            print(e)
-            del f[self.data_id]
-
-        # Close file
-        f.close()
-
+        for i in range(0, self.frame_count):
+            yield self.inputs_memmap[i], self.targets_memmap[i]
 
     def get_frames(self):
-        for video in self.data.videos:
-            with open(video['annotation']) as f:
-                data = json.load(f)
-            balls = data['balls']
-
-            # Initialize video capture
-            image_reader = imageio.get_reader(uri=video['filename'], format='ffmpeg')
-
-            for i, image in enumerate(image_reader):
-
-                # Get frame information
-                ball = balls.get(str(i), None)
-                found = ball is not None
-
-                # Continue if we ball was not found
-                if not found:   continue
-
-                # Convert to grayscale
-                image = image.mean(axis=2)
-
-                yield Frame(
-                    image=image,
-                    x=ball['x'] / self.data.ORIGINAL_WIDTH,
-                    y=ball['y'] / self.data.ORIGINAL_HEIGHT
-                )
+        for frame in self.frames:
+            # Read file
+            frame.image = imageio.imread(frame.filename)
+            yield frame
 
 
     def available_memory(self):
@@ -161,10 +147,10 @@ class FrameLoader:
 
     def data_can_fit_in_memory(self):
         # Determine size of a single element in bytes
-        element_size = self.inputs.dtype.itemsize
+        element_size = self.inputs_memmap.dtype.itemsize
 
         # Get number of elements in total
-        element_count = self.inputs.size
+        element_count = self.inputs_memmap.size
 
         # Total size in bytes
         size_total = element_count * element_size
@@ -181,7 +167,42 @@ class FrameLoader:
 
 
 class Frame:
-    def __init__(self, x, y, image):
+    def __init__(self, x, y, found, filename, foldername, image=None):
         self.x = x
         self.y = y
+        self.found = found
+        self.filename = filename
+        self.foldername = foldername # Used for identifying what video the frame is from
         self.image = image
+
+
+ballPositionHeatMapWeights = np.array([
+    [0.18, 0.25, 0.18],
+    [0.25, 1.00, 0.25],
+    [0.18, 0.25, 0.18]
+])
+
+
+def ballPositionHeatMap(found, x, y, cells_x, cells_y):
+    heatmap = np.zeros(shape=(cells_y, cells_x))
+    if not found:
+        return np.hstack((heatmap.flatten(), 1.0)).astype('float32')
+
+    # Get ball cell coordinate
+    x_cell = math.floor(x * cells_x)
+    y_cell = math.floor(y * cells_y)
+
+    for w_x, x_offset in enumerate([-1, 0, 1]):
+        for w_y, y_offset in enumerate([-1, 0, 1]):
+            x_idx = x_cell + x_offset
+            y_idx = y_cell + y_offset
+
+            # Check border constraints
+            if x_idx < 0 or y_idx < 0:  continue
+            if x_idx + 1 > cells_x:     continue
+            if y_idx + 1 > cells_y:     continue
+
+            # Assign weight
+            heatmap[y_idx, x_idx] = ballPositionHeatMapWeights[w_y, w_x]
+
+    return np.hstack((heatmap.flatten(), 0.0)).astype('float32')

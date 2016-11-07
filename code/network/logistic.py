@@ -4,7 +4,7 @@ import tensorflow as tf
 
 from network.base import Network
 
-class SimpleRegressor(Network):
+class LogisticClassifier(Network):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -13,22 +13,22 @@ class SimpleRegressor(Network):
         self.x_reshaped = tf.reshape(self.x, shape=[-1, total_pixels])
 
         # Weights for layer 1
-        self.W_1 = tf.Variable(tf.random_normal([total_pixels, 2], stddev=0.35), name='weights-layer-1')
-        self.b_1 = tf.Variable(tf.zeros([2]), name='biases-layer-1')
+        self.W_1 = tf.Variable(tf.random_normal([total_pixels, self.target_shape[1]], stddev=0.35), name='weights-layer-1')
+        self.b_1 = tf.Variable(tf.zeros([self.target_shape[1]]), name='biases-layer-1')
 
     def init_network(self):
 
         # Layer 1
         a_1 = tf.matmul(self.x_reshaped, self.W_1) + self.b_1
-        #z_1 = tf.nn.relu(a_1)
+        z_1 = tf.nn.softmax(a_1)
 
         # Final output
-        self.output = a_1
+        self.output = z_1
 
     def init_optimizer(self):
-        # Minimize mean squared error
-        self.cost = tf.reduce_mean(tf.square(self.y - self.output))
-
+        # Minimize cross entropy
+        self.cost = tf.reduce_mean(-tf.reduce_sum(self.y * tf.log(tf.clip_by_value(self.output, 1e-10, 1.0)), reduction_indices=[1]))
+        
         # Gradient Descent
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
 
