@@ -34,20 +34,6 @@ class ValidationMinibatches:
         self.batch_count_val   = math.ceil(self.n_val   / self.batch_size)
         self.batch_count_test  = math.ceil(self.n_test  / self.batch_size)
 
-        ## TODO: Is this necessary?
-        # if self.cache:
-        #     print('Loading data into memory..')
-        #     #self.inputs  = self.frame_iterator.inputs_memmap[...]
-        #     #self.targets = self.frame_iterator.targets_memmap[...]
-        #     input_data = []
-        #     target_data = []
-        #     for i in range(0, frame_count):
-        #         input_data.append(self.frame_iterator.inputs_memmap[i])
-        #         target_data.append(self.frame_iterator.targets_memmap[i])
-        #
-        #     self.inputs  = np.asarray(input_data,  dtype=self.frame_iterator.inputs_memmap.dtype)
-        #     self.targets = np.asarray(target_data, dtype=self.frame_iterator.targets_memmap.dtype)
-
 
     @property
     def train(self):
@@ -60,13 +46,6 @@ class ValidationMinibatches:
             indices  = self.order_train[idx_from:idx_to]
 
             yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
-
-            # if self.cache:
-            #     yield self.inputs[indices], self.targets[indices]
-            # else:
-            #     # Sort for faster h5py slicing
-            #     indices = sorted(indices)
-            #     yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
 
     @property
@@ -81,13 +60,6 @@ class ValidationMinibatches:
 
             yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
 
-            # if self.cache:
-            #     yield self.inputs[indices], self.targets[indices]
-            # else:
-            #     # Sort for faster h5py slicing
-            #     indices = sorted(indices)
-            #     yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
-
 
     @property
     def test(self):
@@ -100,88 +72,3 @@ class ValidationMinibatches:
             indices  = self.order_test[idx_from:idx_to]
 
             yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
-
-            # if self.cache:
-            #     yield self.inputs[indices], self.targets[indices]
-            # else:
-            #     # Sort for faster h5py slicing
-            #     indices = sorted(indices)
-            #     yield self.frame_iterator.inputs_memmap[indices], self.frame_iterator.targets_memmap[indices]
-
-
-
-# class Validation:
-#     def __init__(self, frame_iterator, frame_count, test_fraction=0.33):
-#         """
-#             Splits selector into train and test data.
-#         """
-#         self.frame_iterator = frame_iterator
-#         self.test_fraction = test_fraction
-#
-#         n_test = int(frame_count // (1.0 / test_fraction))
-#         order = np.random.permutation(frame_count)
-#
-#         self.order_train = order[n_test:]
-#         self.order_test  = order[0:n_test]
-#
-#
-#     @property
-#     def train(self):
-#         for idx in self.order_train:
-#             yield self.frame_iterator.inputs[idx], self.frame_iterator.targets[idx]
-#
-#     @property
-#     def test(self):
-#         for idx in self.order_test:
-#             yield self.frame_iterator.inputs[idx], self.frame_iterator.targets[idx]
-#
-#
-# class Iterator:
-#     def __init__(self, frame_iterator, test_fraction=0.33):
-#         self.frame_iterator = frame_iterator
-#         self.test_fraction = test_fraction
-#
-#
-# class TrainIterator(Iterator):
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-#
-#     def __iter__(self):
-#         counter = SeperationCounter()
-#         for data in self.frame_iterator:
-#             if counter.test_ratio() >= self.test_fraction:
-#                 counter.increment_train()
-#                 yield data
-#             else:
-#                 counter.increment_test()
-#
-#
-# class TestIterator(Iterator):
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-#
-#     def __iter__(self):
-#         counter = SeperationCounter()
-#         for data in self.frame_iterator:
-#             if counter.test_ratio() < self.test_fraction:
-#                 counter.increment_test()
-#                 yield data
-#             else:
-#                 counter.increment_train()
-#
-#
-# class SeperationCounter:
-#     def __init__(self):
-#         # Count labels in each subset
-#         self.in_test = 0
-#         self.in_train = 0
-#
-#     def test_ratio(self):
-#         if self.in_test + self.in_train == 0: return 0
-#         return self.in_test / (self.in_test + self.in_train)
-#
-#     def increment_train(self):
-#         self.in_train += 1
-#
-#     def increment_test(self):
-#         self.in_test += 1
