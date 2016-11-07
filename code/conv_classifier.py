@@ -12,7 +12,7 @@ SHOW_PLOT = 'SHOW_PLOT' in os.environ
 
 # Training parameters
 NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
-LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-2))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-3))
 
 MAX_VIDEOS = math.inf
 if 'RUNNING_ON_LOCAL' in os.environ:
@@ -29,7 +29,7 @@ frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader, cache=fr
 
 # Setup network
 nn = network.ConvolutionalClassifier(name='conv-model-1',
-                                     input_shape=(None, height, width),
+                                     input_shape=(None, height, width, 3),
                                      target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
                                      verbose=True)
 

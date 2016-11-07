@@ -12,7 +12,7 @@ class ConvolutionalClassifier(Network):
 
         # Layer 1
         self.conv_1_W = tf.Variable(
-            initial_value=tf.truncated_normal([5, 5, 1, 32], stddev=0.1),
+            initial_value=tf.truncated_normal([5, 5, 3, 32], stddev=0.1),
             name='weights-conv-layer-1'
         )
         self.conv_1_b = tf.Variable(initial_value=tf.zeros([32]), name='biases-layer-1')
@@ -38,23 +38,18 @@ class ConvolutionalClassifier(Network):
         # Layer 4
         self.W_4 = tf.Variable(
             initial_value=tf.truncated_normal(
-                [512, 2],
+                [512, self.target_shape[1]],
                 stddev=0.1
             ),
             name='weights-layer-4'
         )
-        self.b_4 = tf.Variable(tf.constant(0.1, shape=[2]), name='biases-layer-4')
+        self.b_4 = tf.Variable(tf.constant(0.1, shape=[self.target_shape[1]]), name='biases-layer-4')
 
     def init_network(self):
 
-        self.x_reshaped = tf.reshape(
-            tensor=self.x,
-            shape=(-1,) + self.input_shape[1:] + (1,)
-        )
-
         # Layer 1 - Convolution
         conv_1 = tf.nn.conv2d(
-            input=self.x_reshaped,
+            input=self.x,
             filter=self.conv_1_W,
             strides=[1, 1, 1, 1],
             padding='SAME',
