@@ -27,11 +27,17 @@ class FeatureLoader(FrameLoader):
     INPUT_TENSOR_NAME = 'inputs:0'
     BOTTLENECK_TENSOR_NAME = 'logits/flatten/Reshape:0'
 
+    # URL to the frozen graph
+    GRAPH_URL = 'https://s3-eu-west-1.amazonaws.com/sportcaster-nn/models/pretrained-graphs/inception_v3_imagenet.pb'
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         # Define frozen graph location
         self.MODEL_PATH = os.path.join(self.DATA_FOLDER, 'inception_v3_imagenet.pb')
+        if not os.path.isfile(self.MODEL_PATH):
+            print('Downloading frozen graph')
+            urlretrieve(self.GRAPH_URL, self.MODEL_PATH)
 
         # Create memmory mapped numpy arrays
         self.inputs_memmap_filename = os.path.join(self.DATA_FOLDER,  '%s-feature-inputs.dat'  % (self.data_id))
