@@ -28,44 +28,44 @@ cells_y = frame_loader.cells_y
 frame_loader = utils.ValidationMinibatches(frame_iterator=frame_loader, cache=frame_loader.data_can_fit_in_memory())
 
 # Setup network
-with tf.device('/gpu:1'):
-    nn = network.LogisticClassifier(name='simple-model-1',
-                                    input_shape=(None, height, width, 3),
-                                    target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
-                                    verbose=True)
+nn = network.LogisticClassifier(name='simple-model-1',
+                                input_shape=(None, height, width, 3),
+                                target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
+                                verbose=True)
 
-    with tf.Session() as sess:
-        nn.init(sess)
+config = tf.ConfigProto(allow_soft_placement=True)
+with tf.Session(config=config) as sess:
+    nn.init(sess)
 
-        lossTracker = utils.LossTracker(name=nn.name, num_epochs=NUM_EPOCHS, verbose=True)
-        for epoch in range(0, NUM_EPOCHS):
+    lossTracker = utils.LossTracker(name=nn.name, num_epochs=NUM_EPOCHS, verbose=True)
+    for epoch in range(0, NUM_EPOCHS):
 
-            train_loss = 0.
-            train_batches = 0
-            for images, targets in frame_loader.train:
-                train_loss += nn.train_op(session=sess, x=images / images.std(), y=targets)
-                train_batches += 1
-            train_loss /= train_batches
+        train_loss = 0.
+        train_batches = 0
+        for images, targets in frame_loader.train:
+            train_loss += nn.train_op(session=sess, x=images / images.std(), y=targets)
+            train_batches += 1
+        train_loss /= train_batches
 
-            val_loss = 0.
-            val_batches = 0
-            for images, targets in frame_loader.val:
-                val_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
-                val_batches += 1
-            val_loss /= val_batches
+        val_loss = 0.
+        val_batches = 0
+        for images, targets in frame_loader.val:
+            val_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
+            val_batches += 1
+        val_loss /= val_batches
 
-            lossTracker.addEpoch(train_loss=train_loss, val_loss=val_loss)
+        lossTracker.addEpoch(train_loss=train_loss, val_loss=val_loss)
 
-        # Save model
-        nn.save(sess)
+    # Save model
+    nn.save(sess)
 
-        # Finally evaluate on test data
-        test_loss = 0.
-        test_batches = 0
-        for images, targets in frame_loader.test:
-            test_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
-            test_batches += 1
-        test_loss /= test_batches
+    # Finally evaluate on test data
+    test_loss = 0.
+    test_batches = 0
+    for images, targets in frame_loader.test:
+        test_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
+        test_batches += 1
+    test_loss /= test_batches
 
-        lossTracker.addFinalTestLoss(test_loss)
-        lossTracker.save()
+    lossTracker.addFinalTestLoss(test_loss)
+    lossTracker.save()
