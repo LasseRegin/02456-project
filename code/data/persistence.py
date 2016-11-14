@@ -22,6 +22,9 @@ class DataPersistence:
     ORIGINAL_WIDTH  = 3840
     ORIGINAL_HEIGHT = 2160
 
+    # This video is excluded because we want to use it as the final test demo
+    DEMO_VIDEO = '267b2b632f95b150a8bbebd346ee0727_011000_001000'
+
     DATA_FOLDER = os.path.join(FILEPATH, 'raw')
     def __init__(self, info_url='http://recoordio-zoo.s3-eu-west-1.amazonaws.com/dataset/09102016.json',
                  max_videos=math.inf, target_width=299, target_height=299):
@@ -91,13 +94,14 @@ class DataPersistence:
                 if not os.path.isfile(filename_anno):
                     urlretrieve(url_anno, filename=filename_anno)
 
-                self.videos.append({
-                    'foldername': foldername,
-                    'annotation': filename_anno,
-                    'frame_count': sample['frame_count'],
-                    'filename': filename
-                })
-                video_count += 1
+                if self.DEMO_VIDEO not in basename:
+                    self.videos.append({
+                        'foldername': foldername,
+                        'annotation': filename_anno,
+                        'frame_count': sample['frame_count'],
+                        'filename': filename
+                    })
+                    video_count += 1
 
                 # If the argument `max_videos` is provided we limit the number of
                 # videos we fetch.
@@ -138,6 +142,9 @@ class DataPersistence:
 
     def get_frames_from_folder(self, foldername):
         return list(filter(lambda name: not name.startswith('.'), os.listdir(foldername)))
+
+    def get_demo_video_filename(self):
+        return '%s.mp4' % (os.path.join(self.DATA_FOLDER, self.DEMO_VIDEO))
 
     def __hash__(self):
         m = hashlib.md5()
