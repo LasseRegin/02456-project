@@ -17,8 +17,9 @@ class LogisticClassifier(Network):
         #       This can only be used with logistic regression.
         #self.W_1 = tf.Variable(tf.random_normal([total_pixels, self.target_shape[1]], stddev=0.35), name='weights-layer-1')
         #self.W_1 = tf.Variable(tf.random_normal([total_pixels, self.target_shape[1]], stddev=0.10), name='weights-layer-1')
-        self.W_1 = tf.Variable(tf.zeros([total_pixels, self.target_shape[1]]), name='weights-layer-1')
-        self.b_1 = tf.Variable(tf.zeros([self.target_shape[1]]), name='biases-layer-1')
+        with tf.device('/gpu:1'):
+            self.W_1 = tf.Variable(tf.zeros([total_pixels, self.target_shape[1]]), name='weights-layer-1')
+            self.b_1 = tf.Variable(tf.zeros([self.target_shape[1]]), name='biases-layer-1')
 
     def init_network(self):
 
