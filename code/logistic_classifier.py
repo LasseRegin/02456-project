@@ -38,7 +38,9 @@ nn = network.LogisticClassifier(name='simple-model-1',
 #    device_count = {'GPU': 0}
 #)
 #with tf.Session(config=config) as sess:
-with tf.Session() as sess:
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+with tf.Session(config=config) as sess:
     nn.init(sess)
 
     lossTracker = utils.LossTracker(name=nn.name, num_epochs=NUM_EPOCHS, verbose=True)

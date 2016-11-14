@@ -12,7 +12,7 @@ SHOW_PLOT = 'SHOW_PLOT' in os.environ
 
 # Training parameters
 NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 500))
-LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-4))
+LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-5))
 
 MAX_VIDEOS = math.inf
 if 'RUNNING_ON_LOCAL' in os.environ:
@@ -33,7 +33,9 @@ nn = network.LogisticClassifier(name='simple-features-model-1',
                                 target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
                                 verbose=True)
 
-with tf.Session() as sess:
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+with tf.Session(config=config) as sess:
     nn.init(sess)
 
     lossTracker = utils.LossTracker(name=nn.name, num_epochs=NUM_EPOCHS, verbose=True)

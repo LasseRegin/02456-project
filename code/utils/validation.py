@@ -6,7 +6,8 @@ import numpy as np
 
 
 class ValidationMinibatches:
-    def __init__(self, frame_iterator, val_fraction=0.20, test_fraction=0.30, batch_size=50, cache=False):
+    def __init__(self, frame_iterator, val_fraction=0.20, test_fraction=0.30,
+                 batch_size=50, cache=False, random_seed=42):
         """
             Splits frame loader into train and validation data.
         """
@@ -15,6 +16,9 @@ class ValidationMinibatches:
         self.test_fraction = test_fraction
         self.batch_size = batch_size
         self.cache = cache
+
+        # Set random seed so we get consistent results
+        np.random.seed(random_seed)
 
         if not hasattr(frame_iterator, 'inputs_memmap'):
             raise KeyError('frame_iterator must be of type FrameLoader')
