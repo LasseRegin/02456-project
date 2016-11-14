@@ -11,7 +11,7 @@ import tensorflow as tf
 SHOW_PLOT = 'SHOW_PLOT' in os.environ
 
 # Training parameters
-NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 20))
+NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 500))
 LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-4))
 
 MAX_VIDEOS = math.inf

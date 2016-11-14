@@ -1,7 +1,7 @@
 # Folders
 code/data/raw
 code/network/models
-code/utils/runs
+#code/utils/runs
 
 # Temp file
 code/output.txt
