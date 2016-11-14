@@ -11,7 +11,10 @@ import network
 
 
 # Intialize frame loader
-frame_loader = data.FeatureLoader(max_videos=4)
+MAX_VIDEOS = math.inf
+if 'RUNNING_ON_LOCAL' in os.environ:
+    MAX_VIDEOS = 4
+frame_loader = data.FeatureLoader(max_videos=MAX_VIDEOS)
 input_size = frame_loader.BOTTLENECK_TENSOR_SIZE
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
@@ -80,7 +83,7 @@ with tf.Session(config=config) as sess:
 
     total_count = sum(count for count in top_k_counter.values())
 
-    # Compute cumulatitive count
+    # Compute cumulative count
     print('')
     print('Top k CDF (%.4f)' % (TP / counts))
     for k in range(0, max(top_k_counter.keys())):

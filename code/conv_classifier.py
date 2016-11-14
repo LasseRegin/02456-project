@@ -31,7 +31,9 @@ nn = network.ConvolutionalClassifier(name='conv-model-1',
                                      target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
                                      verbose=True)
 
-with tf.Session() as sess:
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+with tf.Session(config=config) as sess:
     nn.init(sess)
 
     lossTracker = utils.LossTracker(name=nn.name, num_epochs=NUM_EPOCHS, verbose=True)
