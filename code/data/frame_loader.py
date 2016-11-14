@@ -56,6 +56,7 @@ class FrameLoader:
                     y=y,
                     found=found,
                     filename=frame_filename,
+                    video_filename=video['filename'],
                     foldername=video['foldername']
                 ))
 
@@ -166,13 +167,14 @@ class FrameLoader:
 
 
 class Frame:
-    def __init__(self, x, y, found, filename, foldername, image=None):
+    def __init__(self, x, y, found, filename, foldername, image=None, video_filename=None):
         self.x = x
         self.y = y
         self.found = found
         self.filename = filename
         self.foldername = foldername # Used for identifying what video the frame is from
         self.image = image
+        self.video_filename = video_filename
 
 
 ballPositionHeatMapWeights = np.array([

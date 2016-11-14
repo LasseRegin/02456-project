@@ -94,7 +94,8 @@ class DataPersistence:
                 self.videos.append({
                     'foldername': foldername,
                     'annotation': filename_anno,
-                    'frame_count': sample['frame_count']
+                    'frame_count': sample['frame_count'],
+                    'filename': filename
                 })
                 video_count += 1
 
