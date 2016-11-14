@@ -1,14 +1,24 @@
+# Presentation
+Presentation:
+* introduktion af problemstilling
+* data (billede af video, statistik fra data)
+* preprocessering af data (trækker mean fra, target map)
+* logistic regression 
+* cnn (inception graf)
+* resultater (loss curve, summary statistik, farve boldområde)
+* demo (bedste model)
 
 # TODOs
 
 Lasse
-* Ask Philip about the loss of spatial information using the Inception graph
-* Create persistency for Inception graph output
-* Test with logistic regression
-
+* Find best model (be the best you can be)
+* summary statitics
+* vælg god testvideo og udeluk fra data
 
 Nikolaj
-* Finish video evaluation script
+* Convert video script to work on full HD (and Lasse)
+* Find out basic statistics about the dataset
+* Begynd på slides
 
 
 # Meetings
