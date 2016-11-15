@@ -120,7 +120,7 @@ class SequenceValidationMinibatches:
         test_to         = test_from + self.n_test
         self.order_test = order[test_from:test_to]
 
-        self.batch_count_train = math.ceil((self.n_train               ) / self.batch_size)
+        self.batch_count_train = math.ceil((self.n_train - self.n_steps) / self.batch_size)
         self.batch_count_val   = math.ceil((self.n_val   - self.n_steps) / self.batch_size)
         self.batch_count_test  = math.ceil((self.n_test  - self.n_steps) / self.batch_size)
 
