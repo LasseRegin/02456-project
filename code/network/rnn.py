@@ -6,9 +6,8 @@ from tensorflow.python.ops import rnn, rnn_cell
 from network.base import Network
 
 class RNNClassifier(Network):
-    def __init__(self, n_steps, dropout=0.0, **kwargs):
+    def __init__(self, n_steps, **kwargs):
         self.n_steps = n_steps
-        self.dropout = dropout
         super().__init__(**kwargs)
 
     def init_variables(self):
@@ -31,9 +30,9 @@ class RNNClassifier(Network):
         lstm_cell = rnn_cell.BasicLSTMCell(128, forget_bias=1.0)
 
         # Add dropout
-        if self.dropout > 0.0:
+        if self._keep_prob < 1.0:
             lstm_cell = tf.nn.rnn_cell.DropoutWrapper(
-                lstm_cell, output_keep_prob=self.dropout
+                lstm_cell, output_keep_prob=self.keep_prob
             )
 
 
@@ -48,6 +47,9 @@ class RNNClassifier(Network):
 
         # Linear activation, using rnn inner loop last output
         a_1 = tf.matmul(outputs[-1], self.W_1) + self.b_1
+        if self._keep_prob < 1.0:
+            a_1 = tf.nn.dropout(a_1, self._keep_prob)
+            
         z_1 = tf.nn.softmax(a_1)
 
         # Final output

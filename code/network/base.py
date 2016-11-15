@@ -10,10 +10,11 @@ class Network:
     MODELS_FOLDER = os.path.join(FILEPATH, 'models')
 
     def __init__(self, name, input_shape, target_shape, learning_rate=1e-3,
-                 verbose=False, **kwargs):
+                 keep_prob=1.0, verbose=False, **kwargs):
         # Name is used for saving and loading the model
         self.name = name
         self.verbose = verbose
+        self._keep_prob = keep_prob
 
         # Shapes
         self.input_shape = input_shape
@@ -26,6 +27,10 @@ class Network:
         self._print('Setting up network..')
         self.init_placeholders()
         self.init_variables()
+
+        # Define variable for keeping probability (dropout)
+        self.keep_prob = tf.placeholder(tf.float32)
+
         self.init_network()
         self.init_optimizer()
 
@@ -90,18 +95,16 @@ class Network:
             # With optimization step
             _, loss = session.run([self.optimizer_step, self.cost], feed_dict={
                 self.x: x,
-                self.y: y
+                self.y: y,
+                self.keep_prob: self._keep_prob
             })
-            #print('grads')
-            #for i, (grads, _vars) in enumerate(grads_and_vars):
-            #    print(i)
-            #    print(grads.mean())
 
         else:
             # Without optimization step
             loss = session.run(self.cost, feed_dict={
                 self.x: x,
-                self.y: y
+                self.y: y,
+                self.keep_prob: 1.0
             })
 
         assert not (np.isnan(loss) or np.isinf(loss)), 'Loss returned NaN/Inf'
