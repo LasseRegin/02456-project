@@ -16,6 +16,7 @@ NUM_EPOCHS      = int(os.environ.get('NUM_EPOCHS', 10))
 LEARNING_RATE   = float(os.environ.get('LEARNING_RATE', 1e-6))
 N_STEPS         = int(os.environ.get('N_STEPS', 10))
 BATCH_SIZE      = int(os.environ.get('BATCH_SIZE', 50))
+DROPOUT         = float(os.environ.get('DROPOUT', 0.0))
 
 MAX_VIDEOS = math.inf
 if 'RUNNING_ON_LOCAL' in os.environ:
@@ -34,6 +35,7 @@ frame_loader = utils.SequenceValidationMinibatches(frame_iterator=frame_loader, 
 # Initialize network
 nn = network.RNNClassifier(name='rnn-features-model-1',
                            n_steps=N_STEPS,
+                           dropout=DROPOUT,
                            input_shape=(None, N_STEPS, input_size),
                            target_shape=(None, cells_x * cells_y + 1),
                            learning_rate=LEARNING_RATE,

@@ -6,8 +6,9 @@ from tensorflow.python.ops import rnn, rnn_cell
 from network.base import Network
 
 class RNNClassifier(Network):
-    def __init__(self, n_steps, **kwargs):
+    def __init__(self, n_steps, dropout=0.0, **kwargs):
         self.n_steps = n_steps
+        self.dropout = dropout
         super().__init__(**kwargs)
 
     def init_variables(self):
@@ -29,7 +30,19 @@ class RNNClassifier(Network):
         # Define a lstm cell with tensorflow
         lstm_cell = rnn_cell.BasicLSTMCell(128, forget_bias=1.0)
 
+        # Add dropout
+        if self.dropout > 0.0:
+            lstm_cell = tf.nn.rnn_cell.DropoutWrapper(
+                lstm_cell, output_keep_prob=self.dropout
+            )
+
+
+        #lstm = rnn_cell.BasicLSTMCell(lstm_size, state_is_tuple=False)
+        #stacked_lstm = rnn_cell.MultiRNNCell([lstm] * number_of_layers, state_is_tuple=False)
+        #stacked_lstm = rnn_cell.MultiRNNCell([lstm_cell] * 4)
+
         # Get lstm cell output
+        #outputs, states = rnn.rnn(stacked_lstm, self.x_reshaped, dtype=tf.float32)
         outputs, states = rnn.rnn(lstm_cell, self.x_reshaped, dtype=tf.float32)
         #outputs, states = rnn.rnn(cell=lstm_cell, inputs=self.x_reshaped, dtype=tf.float32)
 
