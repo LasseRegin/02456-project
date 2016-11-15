@@ -34,7 +34,11 @@ class RNNClassifier(Network):
         #outputs, states = rnn.rnn(cell=lstm_cell, inputs=self.x_reshaped, dtype=tf.float32)
 
         # Linear activation, using rnn inner loop last output
-        self.output = tf.matmul(outputs[-1], self.W_1) + self.b_1
+        a_1 = tf.matmul(outputs[-1], self.W_1) + self.b_1
+        z_1 = tf.nn.softmax(a_1)
+
+        # Final output
+        self.output = z_1
 
 
     def init_optimizer(self):
