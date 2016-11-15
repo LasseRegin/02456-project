@@ -33,14 +33,22 @@ frame_loader = utils.SequenceValidationMinibatches(frame_iterator=frame_loader, 
 
 
 
+print('train')
 for input_seqs, targets in frame_loader.train:
     print(input_seqs.shape)
     print(targets.shape)
 
+print('----------')
+print('')
+
+print('val')
 for input_seqs, targets in frame_loader.val:
     print(input_seqs.shape)
     print(targets.shape)
+print('----------')
+print('')
 
+print('test')
 for input_seqs, targets in frame_loader.test:
     print(input_seqs.shape)
     print(targets.shape)
