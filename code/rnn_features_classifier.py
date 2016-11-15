@@ -88,6 +88,8 @@ with tf.Session(config=config) as sess:
         train_loss = 0.
         train_batches = 0
         for input_seqs, targets in frame_loader.train:
+            print(input_seqs)
+            print(targets)
             train_loss += nn.train_op(session=sess, x=input_seqs, y=targets)
             train_batches += 1
         train_loss /= train_batches
@@ -95,8 +97,10 @@ with tf.Session(config=config) as sess:
         val_loss = 0.
         val_batches = 0
         for input_seqs, targets in frame_loader.val:
-           val_loss += nn.val_op(session=sess, x=input_seqs, y=targets)
-           val_batches += 1
+            print(input_seqs)
+            print(targets)
+            val_loss += nn.val_op(session=sess, x=input_seqs, y=targets)
+            val_batches += 1
         val_loss /= val_batches
 
         lossTracker.addEpoch(train_loss=train_loss, val_loss=val_loss)
