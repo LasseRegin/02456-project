@@ -30,6 +30,24 @@ cells_y = frame_loader.cells_y
 
 # Split in train, validation and test set
 frame_loader = utils.SequenceValidationMinibatches(frame_iterator=frame_loader, batch_size=BATCH_SIZE)
+
+
+
+for input_seqs, targets in frame_loader.train:
+    print(input_seqs.shape)
+    print(targets.shape)
+
+for input_seqs, targets in frame_loader.val:
+    print(input_seqs.shape)
+    print(targets.shape)
+
+for input_seqs, targets in frame_loader.test:
+    print(input_seqs.shape)
+    print(targets.shape)
+
+
+import sys; sys.exit()
+
 #
 #
 # class Minibatches:
