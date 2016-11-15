@@ -21,13 +21,13 @@ class RNNClassifier(Network):
 
 
         # Weights for layer 1
-        self.W_1 = tf.Variable(tf.random_normal([128, self.target_shape[1]]), name='weights-layer-1')
+        self.W_1 = tf.Variable(tf.random_normal([256, self.target_shape[1]]), name='weights-layer-1')
         self.b_1 = tf.Variable(tf.random_normal([self.target_shape[1]]), name='biases-layer-1')
 
     def init_network(self):
 
         # Define a lstm cell with tensorflow
-        lstm_cell = rnn_cell.BasicLSTMCell(128, forget_bias=1.0)
+        lstm_cell = rnn_cell.BasicLSTMCell(256, forget_bias=1.0)
 
         # Add dropout
         if self._keep_prob < 1.0:
