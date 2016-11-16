@@ -43,15 +43,15 @@ with tf.Session(config=config) as sess:
 
         train_loss = 0.
         train_batches = 0
-        for images, targets in frame_loader.train:
-            train_loss += nn.train_op(session=sess, x=images / images.std(), y=targets)
+        for features, targets in frame_loader.train:
+            train_loss += nn.train_op(session=sess, x=features, y=targets)
             train_batches += 1
         train_loss /= train_batches
 
         val_loss = 0.
         val_batches = 0
-        for images, targets in frame_loader.val:
-            val_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
+        for features, targets in frame_loader.val:
+            val_loss += nn.val_op(session=sess, x=features, y=targets)
             val_batches += 1
         val_loss /= val_batches
 
@@ -63,8 +63,8 @@ with tf.Session(config=config) as sess:
     # Finally evaluate on test data
     test_loss = 0.
     test_batches = 0
-    for images, targets in frame_loader.test:
-        test_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
+    for features, targets in frame_loader.test:
+        test_loss += nn.val_op(session=sess, x=features, y=targets)
         test_batches += 1
     test_loss /= test_batches
 
