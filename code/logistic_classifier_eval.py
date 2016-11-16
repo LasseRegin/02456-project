@@ -1,6 +1,7 @@
 
 import os
 import sys
+import math
 import numpy as np
 import tensorflow as tf
 import collections
