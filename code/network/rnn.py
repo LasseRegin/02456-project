@@ -36,7 +36,7 @@ class RNNClassifier(Network):
             )
 
 
-        lstm_cell = rnn_cell.BasicLSTMCell(lstm_size, state_is_tuple=False)
+        #lstm_cell = rnn_cell.BasicLSTMCell(lstm_size, state_is_tuple=False)
         #stacked_lstm = rnn_cell.MultiRNNCell([lstm] * number_of_layers, state_is_tuple=False)
         #stacked_lstm = rnn_cell.MultiRNNCell([lstm_cell] * 2)
 
