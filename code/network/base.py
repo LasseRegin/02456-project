@@ -29,7 +29,7 @@ class Network:
         self.init_variables()
 
         # Define variable for keeping probability (dropout)
-        self.keep_prob = tf.placeholder(tf.float32)
+        self.keep_prob = tf.placeholder(tf.float32, name='keep-probability')
 
         self.init_network()
         self.init_optimizer()
@@ -81,7 +81,8 @@ class Network:
 
     def predict(self, session, x):
         return session.run(self.output, feed_dict={
-            self.x: x
+            self.x: x,
+            self.keep_prob: 1.0
         })
 
     def train_op(self, session, x, y):
