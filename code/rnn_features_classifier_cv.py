@@ -85,6 +85,7 @@ for K in range(0, K_FOLDS):
 
         error_tracker.evaluate(sess, nn, frame_loader_cv.test, cells_x, cells_y, test_loss)
 
+    # Remove nodes from graph
     tf.reset_default_graph()
 
 # Save errors
