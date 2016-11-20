@@ -36,14 +36,14 @@ class RNNClassifier(Network):
             )
 
 
-        #lstm = rnn_cell.BasicLSTMCell(lstm_size, state_is_tuple=False)
+        lstm_cell = rnn_cell.BasicLSTMCell(lstm_size, state_is_tuple=False)
         #stacked_lstm = rnn_cell.MultiRNNCell([lstm] * number_of_layers, state_is_tuple=False)
-        stacked_lstm = rnn_cell.MultiRNNCell([lstm_cell] * 2)
+        #stacked_lstm = rnn_cell.MultiRNNCell([lstm_cell] * 2)
 
         # Get lstm cell output
         #outputs, states = rnn.rnn(stacked_lstm, self.x_reshaped, dtype=tf.float32)
-        outputs, states = rnn.rnn(lstm_cell, self.x_reshaped, dtype=tf.float32)
-        #outputs, states = rnn.rnn(cell=lstm_cell, inputs=self.x_reshaped, dtype=tf.float32)
+        #outputs, states = rnn.rnn(lstm_cell, self.x_reshaped, dtype=tf.float32)
+        outputs, states = rnn.rnn(cell=lstm_cell, inputs=self.x_reshaped, dtype=tf.float32)
 
         # Linear activation, using rnn inner loop last output
         a_1 = tf.matmul(outputs[-1], self.W_1) + self.b_1
