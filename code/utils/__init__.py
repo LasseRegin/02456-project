@@ -5,4 +5,4 @@ from utils.minibatch import Minibatch, MinibatchUncached
 from utils.misc import ReshapeAndStandardize
 from utils.validation import ValidationMinibatches, SequenceValidationMinibatches
 from utils.plot import LossPlot
-from utils.tracker import LossTracker
+from utils.tracker import LossTracker, ErrorCalculations
