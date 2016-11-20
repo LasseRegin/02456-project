@@ -1,6 +1,10 @@
 #!/bin/sh
 
-export K_FOLDS=5
+#export K_FOLDS=5
+
+# TODO: Remove this
+export K_FOLDS=2
+export RUNNING_ON_LOCAL=1
 
 # Run logistic regression
 NUM_EPOCHS=500 LEARNING_RATE=1e-4 python logistic_classifier.py
