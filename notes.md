@@ -11,6 +11,7 @@ Presentation:
 # TODOs
 
 Lasse
+* Kør frameloader på dendron for at tælle hvor mange frames der er annoterede
 * Find best model (be the best you can be)
 * summary statitics
 * vælg god testvideo og udeluk fra data
