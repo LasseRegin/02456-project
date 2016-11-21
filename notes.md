@@ -7,19 +7,26 @@ Presentation:
 * cnn (inception graf)
 * resultater (loss curve, summary statistik, farve boldområde)
 * demo (bedste model)
+* skrevet noget til inception grafen
 
 # TODOs
 
 Lasse
 * Kør frameloader på dendron for at tælle hvor mange frames der er annoterede
-* Find best model (be the best you can be)
-* summary statitics
-* vælg god testvideo og udeluk fra data
+* boxplots med fejl
+* lav demo
+* loss plots
+* rnn slide
+* logistic regression (laver billede)
 
 Nikolaj
-* Convert video script to work on full HD (and Lasse)
-* Find out basic statistics about the dataset
-* Begynd på slides
+* tilføj billede med bold markeret rød på 1. intro slide
+* 2. introslide med indholdsfortegnelse
+* logistic regression
+* tilføj conclusion slide
+* tilføj værdier til matrix
+
+
 
 
 # Meetings
