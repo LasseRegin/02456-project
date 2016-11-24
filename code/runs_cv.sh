@@ -4,7 +4,8 @@ export K_FOLDS=5
 #export K_FOLDS=2 # TODO: Remove this
 
 # Run logistic regression
-K_FOLDS=5 NUM_EPOCHS=300 LEARNING_RATE=2e-4 python logistic_classifier_cv.py
+K_FOLDS=5 NUM_EPOCHS=500 LEARNING_RATE=1e-6 python logistic_classifier_cv.py
+#RUNNING_ON_LOCAL=1 K_FOLDS=5 NUM_EPOCHS=300 LEARNING_RATE=2e-4 python logistic_classifier_cv.py
 
 # Run logistic regression on features from inception graph
 K_FOLDS=5 NUM_EPOCHS=1000 LEARNING_RATE=1e-4 python logistic_features_classifier_cv.py

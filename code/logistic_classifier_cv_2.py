@@ -25,8 +25,8 @@ height, width = frame_loader.data.target_height, frame_loader.data.target_width
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
 
-name = 'simple-model-1'
-#name = 'simple-model-2'
+#name = 'simple-model-1'
+name = 'simple-model-2'
 error_tracker = utils.ErrorCalculations(name=name)
 for K in range(0, K_FOLDS):
 
