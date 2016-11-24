@@ -39,6 +39,7 @@ nn = network.LogisticClassifier(name='simple-model-1',
 #)
 #with tf.Session(config=config) as sess:
 config = tf.ConfigProto()
+config.device_count = {'GPU': 0}
 config.gpu_options.allow_growth = True
 with tf.Session(config=config) as sess:
     nn.init(sess)
