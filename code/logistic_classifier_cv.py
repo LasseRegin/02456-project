@@ -45,10 +45,10 @@ for K in range(0, K_FOLDS):
                                     target_shape=(None, cells_x * cells_y + 1), learning_rate=LEARNING_RATE,
                                     verbose=False)
 
-    #config = tf.ConfigProto()
-    #config.gpu_options.allow_growth = True
-    #with tf.Session(config=config) as sess:
-    with tf.Session() as sess:
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    with tf.Session(config=config) as sess:
+    #with tf.Session() as sess:
         nn.init(sess)
 
         for epoch in range(0, NUM_EPOCHS):
