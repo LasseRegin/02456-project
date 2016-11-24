@@ -25,7 +25,8 @@ height, width = frame_loader.data.target_height, frame_loader.data.target_width
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
 
-name = 'simple-model-1'
+#name = 'simple-model-1'
+name = 'simple-model-2'
 error_tracker = utils.ErrorCalculations(name=name)
 for K in range(0, K_FOLDS):
 
@@ -51,9 +52,6 @@ for K in range(0, K_FOLDS):
 
         for epoch in range(0, NUM_EPOCHS):
 
-            if epoch % 100 == 0:
-                print('Epoch %d' % (epoch + 1))
-
             train_loss = 0.
             train_batches = 0
             for images, targets in frame_loader_cv.train:
@@ -67,6 +65,11 @@ for K in range(0, K_FOLDS):
                 val_loss += nn.val_op(session=sess, x=images / images.std(), y=targets)
                 val_batches += 1
             val_loss /= val_batches
+
+            if epoch % 100 == 0:
+                print('Epoch %d' % (epoch))
+                print(train_loss)
+                print(val_loss)
 
         # Save model
         nn.save(sess)
