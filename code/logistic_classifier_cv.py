@@ -29,6 +29,8 @@ name = 'simple-model-1'
 error_tracker = utils.ErrorCalculations(name=name)
 for K in range(0, K_FOLDS):
 
+    print('Fold %d/%d' % (K+1, K_FOLDS))
+
     # Split in train, validation and test
     frame_loader_cv = utils.ValidationMinibatches(
         frame_iterator=frame_loader,
@@ -48,6 +50,9 @@ for K in range(0, K_FOLDS):
         nn.init(sess)
 
         for epoch in range(0, NUM_EPOCHS):
+
+            if epoch % 100 == 0:
+                print('Epoch %d' % (epoch + 1))
 
             train_loss = 0.
             train_batches = 0
