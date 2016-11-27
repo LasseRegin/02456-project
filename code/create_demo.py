@@ -40,6 +40,8 @@ with tf.Session(config=config) as sess:
     nn.load(sess)
 
     reader = imageio.get_reader(filename,  'ffmpeg')
+    fps = 30000 / 1001
+    writer = imageio.get_writer('demo.mp4', 'ffmpeg', fps=fps)
     for i, frame in enumerate(reader):
         frame_resized = imresize(frame, size=(299, 299, 3))
 
@@ -49,11 +51,38 @@ with tf.Session(config=config) as sess:
         image_input.resize((1,) + image_input.shape)
         prediction = nn.predict(session=sess, x=image_input).flatten()
 
-        print(i)
-        print(frame.shape)
-        print(frame_resized.shape)
-        print(prediction.shape)
-        print('')
+        # If we predict the ball being there -> draw the probabilities on frame
+        #if prediction.argmax() < len(prediction) - 1:
+        if True: #TODO:
+            heat_map = prediction[:-1]
+
+            # TODO: remove this
+            heat_map /= heat_map.max()
+
+            heat_map.resize((cells_y, cells_x))
+
+
+
+
+            # Create full-size filter
+            heat_filter = np.zeros(frame.shape)
+            indices_x = int(frame.shape[1] // cells_x)
+            indices_y = int(frame.shape[0] // cells_y)
+            for i in range(0, cells_y):
+                for j in range(0, cells_x):
+                    idx_from_x =  j      * indices_x
+                    idx_to_x   = (j + 1) * indices_x
+                    idx_from_y =  i      * indices_y
+                    idx_to_y   = (i + 1) * indices_y
+
+                    heat_filter[idx_from_y:idx_to_y, idx_from_x:idx_to_x] = heat_map[i,j]
+
+            # Apply filter to frame
+            frame = frame * heat_filter
+            frame = frame.astype('uint8')
+
+        writer.append_data(frame)
+    writer.close()
 
         # TODO:
         # 1) Predict using network  √
