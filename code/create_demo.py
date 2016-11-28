@@ -14,29 +14,29 @@ import network
 
 
 # Intialize frame loader
-#frame_loader = data.FrameLoader(max_videos=4)
-#height, width = frame_loader.data.target_height, frame_loader.data.target_width
-#cells_x = frame_loader.cells_x
-#cells_y = frame_loader.cells_y
-
-frame_loader = data.FeatureLoader(max_videos=4)
-input_size = frame_loader.BOTTLENECK_TENSOR_SIZE
+frame_loader = data.FrameLoader(max_videos=4)
+height, width = frame_loader.data.target_height, frame_loader.data.target_width
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
+
+# frame_loader = data.FeatureLoader(max_videos=4)
+# input_size = frame_loader.BOTTLENECK_TENSOR_SIZE
+# cells_x = frame_loader.cells_x
+# cells_y = frame_loader.cells_y
 
 # Get demo video filename
 filename = frame_loader.data.get_demo_video_filename()
 
 # Initialize network
 
-#nn = network.LogisticClassifier(name='simple-model-1',
-#                                input_shape=(None, height, width, 3),
-#                                target_shape=(None, cells_x * cells_y + 1),
-#                                verbose=True)
-nn = network.LogisticClassifier(name='simple-features-model-1',
-                                input_shape=(None, input_size),
+nn = network.LogisticClassifier(name='simple-model-2',
+                                input_shape=(None, height, width, 3),
                                 target_shape=(None, cells_x * cells_y + 1),
                                 verbose=True)
+#nn = network.LogisticClassifier(name='simple-features-model-1',
+#                                input_shape=(None, input_size),
+#                                target_shape=(None, cells_x * cells_y + 1),
+#                                verbose=True)
 
 
 config = tf.ConfigProto()
@@ -53,35 +53,35 @@ with tf.Session(config=config) as sess:
         frame_resized = imresize(frame, size=(299, 299, 3))
 
         # Predict
-        #image_input = frame_resized - frame_resized.mean()
-        #image_input /= image_input.std()
+        image_input = frame_resized - frame_resized.mean()
+        image_input /= image_input.std()
 
-        image_input = frame_resized
-
-        # Load frozen inception graph
-        with gfile.FastGFile(frame_loader.MODEL_PATH, 'rb') as f:
-            graph_def = tf.GraphDef()
-            graph_def.ParseFromString(f.read())
-
-            bottleneck_tensor, input_tensor = tf.import_graph_def(
-                graph_def,
-                name='',
-                return_elements=[frame_loader.BOTTLENECK_TENSOR_NAME, frame_loader.INPUT_TENSOR_NAME]
-            )
-
-        image_features = sess.run(bottleneck_tensor, feed_dict={
-            input_tensor: image_input.reshape((1,) + image_input.shape)
-        })
-
-        image_input = image_features.flatten().astype('float32')
+        # image_input = frame_resized
+        #
+        # # Load frozen inception graph
+        # with gfile.FastGFile(frame_loader.MODEL_PATH, 'rb') as f:
+        #     graph_def = tf.GraphDef()
+        #     graph_def.ParseFromString(f.read())
+        #
+        #     bottleneck_tensor, input_tensor = tf.import_graph_def(
+        #         graph_def,
+        #         name='',
+        #         return_elements=[frame_loader.BOTTLENECK_TENSOR_NAME, frame_loader.INPUT_TENSOR_NAME]
+        #     )
+        #
+        # image_features = sess.run(bottleneck_tensor, feed_dict={
+        #     input_tensor: image_input.reshape((1,) + image_input.shape)
+        # })
+        #
+        # image_input = image_features.flatten().astype('float32')
 
 
         image_input.resize((1,) + image_input.shape)
         prediction = nn.predict(session=sess, x=image_input).flatten()
 
         # If we predict the ball being there -> draw the probabilities on frame
-        #if prediction.argmax() < len(prediction) - 1:
-        if True: #TODO:
+        if prediction.argmax() < len(prediction) - 1:
+        #if True: #TODO:
             heat_map = prediction[:-1]
 
             # TODO: remove this
