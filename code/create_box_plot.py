@@ -23,7 +23,7 @@ def mean_uncertainty(data, confidence=0.95):
 import utils
 
 models = {
-    'simple-model-1': collections.defaultdict(list),
+    'simple-model-2': collections.defaultdict(list),
     'simple-features-model-1': collections.defaultdict(list),
     'conv-model-1': collections.defaultdict(list),
     'rnn-features-model-1': collections.defaultdict(list),
