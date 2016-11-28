@@ -85,7 +85,7 @@ with tf.Session(config=config) as sess:
             heat_map = prediction[:-1]
 
             # TODO: remove this
-            heat_map /= heat_map.max()
+            #heat_map /= heat_map.max()
 
             heat_map.resize((cells_y, cells_x))
 
