@@ -25,7 +25,8 @@ cells_y = frame_loader.cells_y
 # cells_y = frame_loader.cells_y
 
 # Get demo video filename
-filename = frame_loader.data.get_demo_video_filename()
+#filename = frame_loader.data.get_demo_video_filename()
+filename = os.path.join(frame_loader.DATA_FOLDER, '267b2b632f95b150a8bbebd346ee0727_003000_001000.mp4')
 
 # Initialize network
 
