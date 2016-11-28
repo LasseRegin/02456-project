@@ -54,7 +54,7 @@ with tf.Session(config=config) as sess:
 
         # Predict
         image_input = frame_resized - frame_resized.mean()
-        image_input /= image_input.std()
+        #image_input /= image_input.std() # TODO: Tmp
 
         # image_input = frame_resized
         #
