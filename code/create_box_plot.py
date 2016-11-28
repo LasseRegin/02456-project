@@ -64,6 +64,7 @@ accuracies_2 = []
 name2disp = {
     'conv-model-1': 'Conv',
     'simple-model-1': 'Logistic',
+    'simple-model-2': 'Logistic',
     'simple-features-model-1': 'Logistic w. features',
     'rnn-features-model-1': 'RNN'
 }
