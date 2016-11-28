@@ -80,8 +80,8 @@ with tf.Session(config=config) as sess:
         prediction = nn.predict(session=sess, x=image_input).flatten()
 
         # If we predict the ball being there -> draw the probabilities on frame
-        if prediction.argmax() < len(prediction) - 1:
-        #if True: #TODO:
+        #if prediction.argmax() < len(prediction) - 1:
+        if True: #TODO:
             heat_map = prediction[:-1]
 
             # TODO: remove this
