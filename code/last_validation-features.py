@@ -96,6 +96,8 @@ nn = network.LogisticClassifier(name='simple-features-model-1',
 reader = imageio.get_reader(filename,  'ffmpeg')
 inputs = []
 
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
 with tf.Session(config=config) as sess:
     for i, frame in enumerate(reader):
         frame_resized = imresize(frame, size=(299, 299, 3))
@@ -137,8 +139,6 @@ class TestDataIterator:
 
 data_iterator = TestDataIterator(inputs, targets)
 error_tracker = utils.ErrorCalculations(name=nn.name)
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
 with tf.Session(config=config) as sess:
 
     # Load saved model
