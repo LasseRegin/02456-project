@@ -61,7 +61,8 @@ class ErrorCalculations:
 
     def __init__(self, name):
         self.name = name
-        self.run_filename = os.path.join(self.RUNS_FOLDER, '%s-cv.csv' % self.name)
+        #self.run_filename = os.path.join(self.RUNS_FOLDER, '%s-cv.csv' % self.name)
+        self.run_filename = os.path.join(self.RUNS_FOLDER, '%s-last-val.csv' % self.name)
         self.data = []
 
     def evaluate(self, session, nn, test_data_loader, cells_x, cells_y, test_loss):
