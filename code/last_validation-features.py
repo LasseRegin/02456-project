@@ -47,7 +47,7 @@ def ballPositionHeatMap(found, x, y, cells_x, cells_y):
     return np.hstack((heatmap.flatten(), 0.0)).astype('float32')
 
 # Intialize frame loader
-frame_loader = data.FrameLoader(max_videos=4)
+frame_loader = data.FeatureLoader(max_videos=4)
 height, width = frame_loader.data.target_height, frame_loader.data.target_width
 cells_x = frame_loader.cells_x
 cells_y = frame_loader.cells_y
@@ -89,7 +89,7 @@ targets = np.asarray(targets)
 
 # Initialize network
 nn = network.LogisticClassifier(name='simple-features-model-1',
-                                input_shape=(None, input_size),
+                                input_shape=(None, frame_loader.BOTTLENECK_TENSOR_SIZE),
                                 target_shape=(None, cells_x * cells_y + 1),
                                 verbose=True)
 # Load images
