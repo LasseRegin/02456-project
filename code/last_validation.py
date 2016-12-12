@@ -101,7 +101,7 @@ for i, frame in enumerate(reader):
 
     # Predict
     image_input = frame_resized - frame_resized.mean()
-    #image_input /= image_input.std() # TODO: Tmp
+    image_input /= image_input.std() # TODO: Tmp
 
     inputs.append(image_input)
 inputs = np.asarray(inputs)
